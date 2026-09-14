@@ -385,7 +385,7 @@ async function listModels(request) {
   }
 
   const data = await response.json();
-  const rawModels = Array.isArray(data) ? data : data.data;
+  const rawModels = Array.isArray(data) ? data : data.data || data.models;
   const models = Array.isArray(rawModels)
     ? rawModels
         .map((item) => (typeof item === "string" ? item : item && item.id))
