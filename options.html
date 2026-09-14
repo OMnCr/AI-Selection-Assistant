@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI 划词助手设置</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <h1>AI 划词助手</h1>
+          <p class="subtitle">选中文字后，使用「快捷键 + 1/2/3…」发送到 AI 并流式显示回复。</p>
+        </div>
+        <button id="save-top" class="primary" type="button">保存设置</button>
+      </header>
+
+      <section class="card">
+        <h2>接口配置</h2>
+        <div class="field">
+          <label for="baseUrl">Base URL</label>
+          <input id="baseUrl" type="text" spellcheck="false" placeholder="https://api.openai.com/v1" />
+          <p class="hint">兼容 OpenAI Chat Completions 接口。填写到 /v1 即可，也可直接填写完整的 /chat/completions 地址。</p>
+        </div>
+        <div class="field">
+          <label for="apiKey">API Key</label>
+          <input id="apiKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-..." />
+        </div>
+        <div class="model-row">
+          <div class="field model-field">
+            <label for="model">模型名称</label>
+            <input id="model" type="text" spellcheck="false" placeholder="gpt-4o-mini" list="model-list" />
+            <datalist id="model-list"></datalist>
+            <p class="hint">填写 Base URL 后可获取该接口支持的模型列表。</p>
+          </div>
+          <div class="field model-actions">
+            <label>模型列表</label>
+            <button id="fetch-models" type="button" class="secondary">获取模型列表</button>
+            <p id="model-list-result" class="hint" role="status"></p>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="modifier">快捷键修饰键</label>
+            <select id="modifier">
+              <option value="alt">Alt + 数字</option>
+              <option value="ctrl">Ctrl + 数字</option>
+              <option value="ctrl+alt">Ctrl + Alt + 数字</option>
+              <option value="ctrl+shift">Ctrl + Shift + 数字</option>
+              <option value="alt+shift">Alt + Shift + 数字</option>
+              <option value="meta">Meta + 数字</option>
+            </select>
+            <p class="hint">例如选择「Alt + 数字」后，按 Alt+1 使用第 1 个提示词。部分组合可能被浏览器占用，例如 Ctrl+数字 通常用于切换标签页。</p>
+          </div>
+          <div class="field">
+            <label>连接测试</label>
+            <button id="test-connection" type="button" class="secondary">测试当前接口</button>
+            <p id="test-result" class="hint" role="status"></p>
+          </div>
+        </div>
+        <div class="params-grid">
+          <div class="field">
+            <label for="stream">流式传输</label>
+            <label class="switch-label">
+              <input id="stream" type="checkbox" checked />
+              <span>启用流式输出</span>
+            </label>
+          </div>
+          <div class="field">
+            <label for="reasoningEffort">思考等级</label>
+            <select id="reasoningEffort">
+              <option value="default">默认</option>
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="temperature">温度</label>
+            <input id="temperature" type="number" step="0.1" min="0" max="2" placeholder="留空使用接口默认值" />
+          </div>
+          <div class="field">
+            <label for="topP">Top P</label>
+            <input id="topP" type="number" step="0.01" min="0" max="1" placeholder="留空使用接口默认值" />
+          </div>
+          <div class="field">
+            <label for="maxTokens">最大 Token 数</label>
+            <input id="maxTokens" type="number" step="1" min="1" placeholder="留空使用接口默认值" />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2>提示词快捷键</h2>
+            <p class="hint">第 1–9 项分别对应「快捷键 + 1」到「快捷键 + 9」。提示词中可用 {{selection}} 代表选中的文字；如果不写占位符，选中内容会自动追加到末尾。</p>
+          </div>
+          <button id="restore-defaults" type="button" class="secondary">恢复默认提示词</button>
+        </div>
+        <div id="prompt-list" class="prompt-list"></div>
+      </section>
+
+      <footer class="page-footer">
+        <button id="save-bottom" class="primary" type="button">保存设置</button>
+        <span id="save-status" role="status"></span>
+      </footer>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>
