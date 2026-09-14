@@ -156,13 +156,7 @@
     copyButton.textContent = "复制";
     copyButton.title = "复制回复";
 
-    const closeButton = document.createElement("button");
-    closeButton.type = "button";
-    closeButton.className = "ai-inline-button ai-inline-close";
-    closeButton.textContent = "×";
-    closeButton.title = "关闭";
-
-    actions.append(copyButton, closeButton);
+    actions.append(copyButton);
     header.append(title, actions);
 
     const body = document.createElement("div");
@@ -186,7 +180,6 @@
 
     positionPanel(panel, range);
 
-    closeButton.addEventListener("click", closePanel);
     copyButton.addEventListener("click", () => {
       const finalText = textEl.textContent || "";
       if (!finalText) {

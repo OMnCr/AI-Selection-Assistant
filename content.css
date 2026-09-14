@@ -65,14 +65,6 @@
   background: #f0f2f5;
 }
 
-.ai-inline-close {
-  width: 26px;
-  padding-right: 0;
-  padding-left: 0;
-  font-size: 18px;
-  line-height: 1;
-}
-
 .ai-inline-body {
   max-height: 340px;
   overflow: auto;
