@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS = {
   temperature: "",
   topP: "",
   maxTokens: "",
-  reasoningEffort: "default",
+  reasoningEffort: "none",
   prompts: [
     { id: "prompt-1", name: "总结", enabled: true, prompt: "请用简洁的中文总结下面的内容：\n\n{{selection}}" },
     { id: "prompt-2", name: "翻译", enabled: true, prompt: "请把下面的内容翻译成中文：\n\n{{selection}}" },
@@ -80,7 +80,7 @@ function render() {
   document.getElementById("temperature").value = settings.temperature || "";
   document.getElementById("topP").value = settings.topP || "";
   document.getElementById("maxTokens").value = settings.maxTokens || "";
-  document.getElementById("reasoningEffort").value = settings.reasoningEffort || "default";
+  document.getElementById("reasoningEffort").value = settings.reasoningEffort || "none";
 
   promptList.replaceChildren();
   settings.prompts.forEach((prompt, index) => {

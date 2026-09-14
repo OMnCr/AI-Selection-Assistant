@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS = {
   temperature: "",
   topP: "",
   maxTokens: "",
-  reasoningEffort: "default",
+  reasoningEffort: "none",
   prompts: [
     {
       id: "prompt-1",
@@ -156,7 +156,11 @@ function buildRequestBody(settings, messages) {
     body.max_tokens = maxTokens;
   }
 
-  if (settings.reasoningEffort && settings.reasoningEffort !== "default") {
+  if (
+    settings.reasoningEffort &&
+    settings.reasoningEffort !== "none" &&
+    settings.reasoningEffort !== "default"
+  ) {
     body.reasoning_effort = settings.reasoningEffort;
   }
 

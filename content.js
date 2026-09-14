@@ -20,6 +20,8 @@
   let currentSettings = { ...DEFAULT_SETTINGS, prompts: [...DEFAULT_SETTINGS.prompts] };
   let activePanel = null;
   let activePort = null;
+  let autoCloseTimer = null;
+  const AUTO_CLOSE_DELAY = 6000;
 
   function mergeSettings(raw = {}) {
     const prompts =
@@ -186,6 +188,9 @@
 
     positionPanel(panel, range);
 
+    panel.addEventListener("mouseenter", clearAutoCloseTimer);
+    panel.addEventListener("mouseleave", scheduleAutoClose);
+
     closeButton.addEventListener("click", closePanel);
     copyButton.addEventListener("click", () => {
       const finalText = textEl.textContent || "";
@@ -224,6 +229,21 @@
     return activePanel;
   }
 
+  function clearAutoCloseTimer() {
+    if (autoCloseTimer !== null) {
+      window.clearTimeout(autoCloseTimer);
+      autoCloseTimer = null;
+    }
+  }
+
+  function scheduleAutoClose() {
+    clearAutoCloseTimer();
+    autoCloseTimer = window.setTimeout(() => {
+      autoCloseTimer = null;
+      closePanel();
+    }, AUTO_CLOSE_DELAY);
+  }
+
   function positionPanel(panel, range) {
     const rect = range.getBoundingClientRect();
     const width = Math.min(Math.max(rect.width, 340), 720);
@@ -249,6 +269,7 @@
   }
 
   function closePanel() {
+    clearAutoCloseTimer();
     if (activePort) {
       try {
         activePort.disconnect();
@@ -318,6 +339,7 @@
       finished = true;
       panel.body.classList.remove("ai-inline-loading");
       panel.cursor.style.display = "none";
+      scheduleAutoClose();
       if (activePort === port) {
         activePort = null;
       }
