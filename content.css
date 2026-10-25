@@ -87,25 +87,203 @@
   color: #b42318;
 }
 
+.ai-inline-body.ai-inline-error .ai-inline-content {
+  color: #b42318;
+}
+
 .ai-inline-content {
   margin: 0;
   color: #24292f;
   font-family: inherit;
   font-size: 14px;
   line-height: 1.65;
-  white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
 
-.ai-inline-text {
-  white-space: inherit;
+.ai-inline-content.ai-inline-plain {
+  white-space: pre-wrap;
 }
 
-.ai-inline-cursor {
-  display: inline-block;
-  margin-left: 1px;
+.ai-inline-markdown > :first-child {
+  margin-top: 0;
+}
+
+.ai-inline-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.ai-inline-markdown p {
+  margin: 0 0 0.68em;
+}
+
+.ai-inline-markdown h1,
+.ai-inline-markdown h2,
+.ai-inline-markdown h3,
+.ai-inline-markdown h4,
+.ai-inline-markdown h5,
+.ai-inline-markdown h6 {
+  margin: 0.8em 0 0.4em;
+  color: #24292f;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.ai-inline-markdown h1 {
+  font-size: 1.35em;
+}
+
+.ai-inline-markdown h2 {
+  font-size: 1.22em;
+}
+
+.ai-inline-markdown h3 {
+  font-size: 1.12em;
+}
+
+.ai-inline-markdown h4,
+.ai-inline-markdown h5,
+.ai-inline-markdown h6 {
+  font-size: 1em;
+}
+
+.ai-inline-markdown ul,
+.ai-inline-markdown ol {
+  margin: 0.35em 0 0.7em;
+  padding-left: 1.5em;
+}
+
+.ai-inline-markdown li {
+  margin: 0.18em 0;
+  padding-left: 0.12em;
+}
+
+.ai-inline-markdown li > p {
+  margin: 0;
+}
+
+.ai-inline-markdown li > ul,
+.ai-inline-markdown li > ol {
+  margin-top: 0.18em;
+  margin-bottom: 0.3em;
+}
+
+.ai-inline-markdown .ai-inline-task-item {
+  list-style: none;
+}
+
+.ai-inline-markdown .ai-inline-task-item > p > input {
+  width: 13px;
+  height: 13px;
+  margin: 0 6px 0 -1.35em;
+  accent-color: #0969da;
+  vertical-align: -1px;
+}
+
+.ai-inline-markdown blockquote {
+  margin: 0.6em 0;
+  padding: 0.1em 0.85em;
+  color: #57606a;
+  border-left: 3px solid #d0d7de;
+}
+
+.ai-inline-markdown blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.ai-inline-markdown hr {
+  margin: 0.9em 0;
+  border: 0;
+  border-top: 1px solid #d0d7de;
+}
+
+.ai-inline-markdown a {
   color: #0969da;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ai-inline-markdown code {
+  padding: 0.12em 0.32em;
+  color: #24292f;
+  background: #f0f2f5;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+.ai-inline-markdown pre {
+  position: relative;
+  margin: 0.65em 0;
+  padding: 11px 12px;
+  overflow: auto;
+  color: #24292f;
+  background: #f6f8fa;
+  border: 1px solid #e1e6eb;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.ai-inline-markdown pre[data-language]::before {
+  display: block;
+  margin-bottom: 6px;
+  color: #667085;
+  content: attr(data-language);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.ai-inline-markdown pre code {
+  display: block;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border-radius: 0;
+  font-size: inherit;
+  white-space: pre;
+}
+
+.ai-inline-markdown .ai-inline-table-wrap {
+  max-width: 100%;
+  margin: 0.65em 0;
+  overflow-x: auto;
+}
+
+.ai-inline-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ai-inline-markdown th,
+.ai-inline-markdown td {
+  padding: 6px 8px;
+  border: 1px solid #d0d7de;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ai-inline-markdown th {
+  background: #f6f8fa;
+  font-weight: 650;
+}
+
+.ai-inline-markdown .ai-inline-md-image {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  margin: 0.55em 0;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.ai-inline-markdown.ai-inline-streaming > :last-child::after {
+  display: inline-block;
+  margin-left: 2px;
+  color: #0969da;
+  content: "▍";
   animation: ai-inline-blink 0.9s steps(1) infinite;
   vertical-align: baseline;
 }

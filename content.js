@@ -163,25 +163,25 @@
     body.className = "ai-inline-body";
     body.classList.add("ai-inline-loading");
 
-    const pre = document.createElement("pre");
-    pre.className = "ai-inline-content";
-
-    const textEl = document.createElement("span");
-    textEl.className = "ai-inline-text";
-
-    const cursor = document.createElement("span");
-    cursor.className = "ai-inline-cursor";
-    cursor.textContent = "▍";
-
-    pre.append(textEl, cursor);
-    body.append(pre);
+    const contentEl = document.createElement("div");
+    contentEl.className = "ai-inline-content ai-inline-markdown ai-inline-streaming";
+    body.append(contentEl);
     panel.append(header, body);
     document.body.appendChild(panel);
 
     positionPanel(panel, range);
 
+    const state = {
+      panel,
+      contentEl,
+      body,
+      copyButton,
+      rawText: "",
+      renderFrame: null
+    };
+
     copyButton.addEventListener("click", () => {
-      const finalText = textEl.textContent || "";
+      const finalText = state.rawText;
       if (!finalText) {
         return;
       }
@@ -206,15 +206,57 @@
       }, 1200);
     });
 
-    activePanel = {
-      panel,
-      textEl,
-      cursor,
-      body,
-      copyButton
-    };
+    activePanel = state;
 
     return activePanel;
+  }
+
+  function renderPanelMarkdown(panel) {
+    const renderer = globalThis.AIInlineMarkdown;
+    try {
+      if (renderer && typeof renderer.render === "function") {
+        panel.contentEl.replaceChildren(renderer.render(panel.rawText));
+      } else {
+        panel.contentEl.classList.add("ai-inline-plain");
+        panel.contentEl.textContent = panel.rawText;
+      }
+    } catch {
+      panel.contentEl.classList.add("ai-inline-plain");
+      panel.contentEl.textContent = panel.rawText;
+    }
+    panel.body.scrollTop = panel.body.scrollHeight;
+  }
+
+  function schedulePanelRender(panel) {
+    if (panel.renderFrame !== null) {
+      return;
+    }
+    panel.renderFrame = window.requestAnimationFrame(() => {
+      panel.renderFrame = null;
+      if (activePanel === panel) {
+        renderPanelMarkdown(panel);
+      }
+    });
+  }
+
+  function flushPanelRender(panel) {
+    if (panel.renderFrame !== null) {
+      window.cancelAnimationFrame(panel.renderFrame);
+      panel.renderFrame = null;
+    }
+    renderPanelMarkdown(panel);
+  }
+
+  function showPanelError(panel, message) {
+    if (panel.renderFrame !== null) {
+      window.cancelAnimationFrame(panel.renderFrame);
+      panel.renderFrame = null;
+    }
+    panel.rawText = message || "请求失败";
+    panel.contentEl.classList.remove("ai-inline-streaming");
+    panel.contentEl.classList.add("ai-inline-plain");
+    panel.contentEl.textContent = panel.rawText;
+    panel.body.scrollTop = panel.body.scrollHeight;
   }
 
   function positionPanel(panel, range) {
@@ -251,6 +293,9 @@
       activePort = null;
     }
     if (activePanel) {
+      if (activePanel.renderFrame !== null) {
+        window.cancelAnimationFrame(activePanel.renderFrame);
+      }
       activePanel.panel.remove();
       activePanel = null;
     }
@@ -310,7 +355,7 @@
       }
       finished = true;
       panel.body.classList.remove("ai-inline-loading");
-      panel.cursor.style.display = "none";
+      panel.contentEl.classList.remove("ai-inline-streaming");
       if (activePort === port) {
         activePort = null;
       }
@@ -331,15 +376,15 @@
           receivedChunk = true;
           panel.body.classList.remove("ai-inline-loading");
         }
-        panel.textEl.textContent += message.text;
-        panel.body.scrollTop = panel.body.scrollHeight;
+        panel.rawText += message.text;
+        schedulePanelRender(panel);
       } else if (message.type === "done") {
+        flushPanelRender(panel);
         finish();
       } else if (message.type === "error") {
         panel.body.classList.remove("ai-inline-loading");
         panel.body.classList.add("ai-inline-error");
-        panel.cursor.style.display = "none";
-        panel.textEl.textContent = message.message || "请求失败";
+        showPanelError(panel, message.message || "请求失败");
         finish();
       }
     });
@@ -348,9 +393,11 @@
       if (!finished && activePort === port) {
         panel.body.classList.remove("ai-inline-loading");
         panel.body.classList.add("ai-inline-error");
-        panel.cursor.style.display = "none";
-        if (!panel.textEl.textContent) {
-          panel.textEl.textContent = "连接已中断，请重试。";
+        if (!panel.rawText) {
+          showPanelError(panel, "连接已中断，请重试。");
+        } else {
+          flushPanelRender(panel);
+          panel.contentEl.classList.remove("ai-inline-streaming");
         }
         finish();
       }
