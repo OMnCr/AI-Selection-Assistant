@@ -97,6 +97,11 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design notes.
 - Some key combinations belong to the browser or the page (for example `Ctrl + number` for tabs).
 - Selected text is capped at 100,000 characters per request.
 
+## Contributing
+
+- Development, tests and packaging are described in [CONTRIBUTING.md](CONTRIBUTING.md).
+- Report security issues privately as described in [SECURITY.md](SECURITY.md).
+
 ## Author and license
 
 - Author: OMnCr

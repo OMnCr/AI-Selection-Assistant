@@ -126,6 +126,11 @@ scripts/             图标生成、清单校验、ZIP 打包
 - 部分组合键会被浏览器或网页占用（例如 `Ctrl+数字` 切换标签页），可在设置中更换修饰键。
 - 单次发送的选中文本上限为 100,000 字符。
 
+## 参与贡献
+
+- 开发、测试与打包方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+- 安全问题请按 [SECURITY.md](SECURITY.md) 私下报告，不要开公开 issue。
+
 ## 作者与许可证
 
 - 作者：OMnCr

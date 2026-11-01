@@ -11,6 +11,9 @@
     "type": "git",
     "url": "https://github.com/OMnCr/Lightweight-custom-AI-Q-A-plugin.git"
   },
+  "bugs": {
+    "url": "https://github.com/OMnCr/Lightweight-custom-AI-Q-A-plugin/issues"
+  },
   "engines": {
     "node": ">=20"
   },
