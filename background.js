@@ -487,12 +487,14 @@ chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();
 });
 
-chrome.runtime.onInstalled.addListener(async (details) => {
-  const stored = await chrome.storage.local.get("settings");
-  if (!stored.settings) {
-    await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
-  }
+chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     chrome.runtime.openOptionsPage();
   }
+  chrome.storage.local.get("settings").then((stored) => {
+    if (!stored.settings) {
+      return chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
+    }
+    return undefined;
+  });
 });
