@@ -1,4 +1,9 @@
 (() => {
+  if (globalThis.__aiInlineAssistantLoaded) {
+    return;
+  }
+  globalThis.__aiInlineAssistantLoaded = true;
+
   const t = AIInlineI18n.t;
   const DEFAULT_SETTINGS = {
     baseUrl: "https://api.openai.com/v1",
@@ -8,9 +13,24 @@
     prompts: AIInlineI18n.defaultPrompts()
   };
 
-  let currentSettings = { ...DEFAULT_SETTINGS, prompts: [...DEFAULT_SETTINGS.prompts] };
+  const PANEL_MARGIN = 8;
+  const MIN_PANEL_WIDTH = 320;
+  const MAX_PANEL_WIDTH = 720;
+  const MAX_SELECTION_LENGTH = 100000;
+  const NO_SELECTION_HINT_INTERVAL = 6000;
+  const TOAST_DURATION = 3200;
+
+  let currentSettings = {
+    ...DEFAULT_SETTINGS,
+    prompts: [...DEFAULT_SETTINGS.prompts]
+  };
   let activePanel = null;
   let activePort = null;
+  let lastHintAt = 0;
+
+  /* ------------------------------------------------------------------ */
+  /* Settings                                                            */
+  /* ------------------------------------------------------------------ */
 
   function mergeSettings(raw = {}) {
     const prompts =
@@ -32,11 +52,19 @@
     currentSettings = mergeSettings(stored.settings || {});
   }
 
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === "local" && changes.settings) {
-      currentSettings = mergeSettings(changes.settings.newValue || {});
-    }
-  });
+  try {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === "local" && changes.settings) {
+        currentSettings = mergeSettings(changes.settings.newValue || {});
+      }
+    });
+  } catch {
+    // The extension context can be invalidated while the page stays open.
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Shortcuts and selection                                             */
+  /* ------------------------------------------------------------------ */
 
   function matchesModifier(event, modifier) {
     switch (modifier) {
@@ -57,11 +85,12 @@
   }
 
   function digitFromEvent(event) {
-    if (event.code.startsWith("Digit") && event.code.length === 6) {
-      return Number.parseInt(event.code.slice(5), 10);
+    const code = typeof event.code === "string" ? event.code : "";
+    if (code.startsWith("Digit") && code.length === 6) {
+      return Number.parseInt(code.slice(5), 10);
     }
-    if (event.code.startsWith("Numpad") && event.code.length === 7) {
-      return Number.parseInt(event.code.slice(6), 10);
+    if (code.startsWith("Numpad") && code.length === 7) {
+      return Number.parseInt(code.slice(6), 10);
     }
     return null;
   }
@@ -89,7 +118,11 @@
 
     const tagName = active.tagName;
     const isInput = tagName === "INPUT" || tagName === "TEXTAREA";
-    if (!isInput || active.selectionStart === null || active.selectionStart === undefined) {
+    if (
+      !isInput ||
+      active.selectionStart === null ||
+      active.selectionStart === undefined
+    ) {
       return null;
     }
 
@@ -109,8 +142,12 @@
 
     const rect = active.getBoundingClientRect();
     const fakeRange = document.createRange();
-    fakeRange.setStart(active, 0);
-    fakeRange.setEnd(active, 0);
+    try {
+      fakeRange.setStart(active, 0);
+      fakeRange.setEnd(active, 0);
+    } catch {
+      // Some controls reject range boundaries; the rect is all we need.
+    }
     fakeRange.getBoundingClientRect = () => rect;
     return { text, range: fakeRange };
   }
@@ -119,17 +156,31 @@
     return getPageSelection() || getInputSelection();
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Panel                                                               */
+  /* ------------------------------------------------------------------ */
+
+  function createButton(label, className) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ai-inline-button ${className}`;
+    button.textContent = label;
+    button.title = label;
+    return button;
+  }
+
   function createPanel(promptName, range) {
     closePanel();
 
-    if (!document.body) {
+    if (!document.documentElement) {
       throw new Error(t("pageNotReady"));
     }
 
     const panel = document.createElement("section");
     panel.className = "ai-inline-panel";
-    panel.setAttribute("role", "status");
-    panel.setAttribute("aria-live", "polite");
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "false");
+    panel.setAttribute("aria-label", promptName || t("assistantTitle"));
 
     const header = document.createElement("header");
     header.className = "ai-inline-header";
@@ -141,177 +192,328 @@
     const actions = document.createElement("div");
     actions.className = "ai-inline-actions";
 
-    const copyButton = document.createElement("button");
-    copyButton.type = "button";
-    copyButton.className = "ai-inline-button";
-    copyButton.textContent = t("copyReply");
-    copyButton.title = t("copyReply");
+    const stopButton = createButton(t("stopGenerating"), "ai-inline-stop");
+    const copyButton = createButton(t("copyReply"), "ai-inline-copy");
+    const closeButton = createButton("×", "ai-inline-close");
+    closeButton.setAttribute("aria-label", t("closePanel"));
+    closeButton.title = t("closePanel");
 
-    actions.append(copyButton);
+    actions.append(stopButton, copyButton, closeButton);
     header.append(title, actions);
 
     const body = document.createElement("div");
-    body.className = "ai-inline-body";
-    body.classList.add("ai-inline-loading");
+    body.className = "ai-inline-body ai-inline-loading";
     body.dataset.loadingText = t("waitingForReply");
 
     const contentEl = document.createElement("div");
-    contentEl.className = "ai-inline-content ai-inline-markdown ai-inline-streaming";
+    contentEl.className =
+      "ai-inline-content ai-inline-markdown ai-inline-streaming";
     body.append(contentEl);
     panel.append(header, body);
-    document.body.appendChild(panel);
+    document.documentElement.append(panel);
 
-    positionPanel(panel, range);
+    stopButton.hidden = false;
 
     const state = {
       panel,
-      contentEl,
+      header,
+      title,
       body,
+      contentEl,
+      stopButton,
       copyButton,
+      closeButton,
+      baseTitle: title.textContent,
       rawText: "",
-      renderFrame: null
+      renderer: AIInlineMarkdown.createStreamRenderer(contentEl),
+      range,
+      anchorRect: null,
+      placeBelow: true,
+      stickToBottom: true,
+      renderFrame: null,
+      placeFrame: null,
+      finished: false,
+      stopped: false,
+      port: null,
+      cleanup: () => {}
     };
 
+    stopButton.addEventListener("click", () => stopStreaming(state));
     copyButton.addEventListener("click", () => {
-      const finalText = state.rawText;
-      if (!finalText) {
+      copyText(state.rawText, copyButton);
+    });
+    closeButton.addEventListener("click", () => closePanel());
+
+    const anchorRect = measureAnchor(range);
+    state.anchorRect = anchorRect;
+    const viewportHeight = getViewportHeight();
+    const panelHeight = panel.offsetHeight || 160;
+    if (anchorRect) {
+      const fitsBelow =
+        anchorRect.bottom + PANEL_MARGIN + panelHeight <=
+        viewportHeight - PANEL_MARGIN;
+      const fitsAbove = anchorRect.top - panelHeight - PANEL_MARGIN >= PANEL_MARGIN;
+      state.placeBelow = fitsBelow || !fitsAbove;
+    }
+    placePanel(state);
+
+    const onScroll = () => {
+      if (activePanel !== state) {
         return;
       }
-      const fallbackCopy = () => {
-        const fallback = document.createElement("textarea");
-        fallback.value = finalText;
-        fallback.style.position = "fixed";
-        fallback.style.opacity = "0";
-        document.body.appendChild(fallback);
-        fallback.select();
-        document.execCommand("copy");
-        fallback.remove();
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(finalText).catch(fallbackCopy);
-      } else {
-        fallbackCopy();
+      const rect = measureAnchor(state.range);
+      if (!rect) {
+        return;
       }
-      copyButton.textContent = t("copied");
-      window.setTimeout(() => {
-        copyButton.textContent = t("copyReply");
-      }, 1200);
-    });
+      if (
+        rect.bottom < -PANEL_MARGIN ||
+        rect.top > getViewportHeight() + PANEL_MARGIN
+      ) {
+        closePanel();
+        return;
+      }
+      state.anchorRect = rect;
+      schedulePlacement(state);
+    };
+
+    const onResize = () => {
+      if (activePanel !== state) {
+        return;
+      }
+      const rect = measureAnchor(state.range);
+      if (rect) {
+        state.anchorRect = rect;
+      }
+      schedulePlacement(state);
+    };
+
+    const onBodyScroll = () => {
+      state.stickToBottom =
+        state.body.scrollTop + state.body.clientHeight >=
+        state.body.scrollHeight - 24;
+    };
+
+    const observer = new ResizeObserver(() => schedulePlacement(state));
+    observer.observe(panel);
+
+    body.addEventListener("scroll", onBodyScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+
+    state.cleanup = () => {
+      observer.disconnect();
+      body.removeEventListener("scroll", onBodyScroll);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+      if (state.renderFrame !== null) {
+        window.cancelAnimationFrame(state.renderFrame);
+        state.renderFrame = null;
+      }
+      if (state.placeFrame !== null) {
+        window.cancelAnimationFrame(state.placeFrame);
+        state.placeFrame = null;
+      }
+    };
 
     activePanel = state;
-
-    return activePanel;
+    return state;
   }
 
-  function renderPanelMarkdown(panel) {
-    const renderer = globalThis.AIInlineMarkdown;
+  function getViewportHeight() {
+    return document.documentElement.clientHeight || window.innerHeight;
+  }
+
+  function getViewportWidth() {
+    return document.documentElement.clientWidth || window.innerWidth;
+  }
+
+  function measureAnchor(range) {
     try {
-      if (renderer && typeof renderer.render === "function") {
-        panel.contentEl.replaceChildren(renderer.render(panel.rawText));
-      } else {
-        panel.contentEl.classList.add("ai-inline-plain");
-        panel.contentEl.textContent = panel.rawText;
-      }
+      return range.getBoundingClientRect();
     } catch {
-      panel.contentEl.classList.add("ai-inline-plain");
-      panel.contentEl.textContent = panel.rawText;
+      return null;
     }
-    panel.body.scrollTop = panel.body.scrollHeight;
   }
 
-  function schedulePanelRender(panel) {
-    if (panel.renderFrame !== null) {
+  function placePanel(state) {
+    const rect = state.anchorRect;
+    if (!rect) {
       return;
     }
-    panel.renderFrame = window.requestAnimationFrame(() => {
-      panel.renderFrame = null;
-      if (activePanel === panel) {
-        renderPanelMarkdown(panel);
+
+    const viewportWidth = getViewportWidth();
+    const viewportHeight = getViewportHeight();
+    const availableWidth = Math.max(240, viewportWidth - PANEL_MARGIN * 2);
+    const width = Math.min(
+      Math.max(rect.width, MIN_PANEL_WIDTH),
+      MAX_PANEL_WIDTH,
+      availableWidth
+    );
+    state.panel.style.width = `${Math.round(width)}px`;
+
+    const height = state.panel.offsetHeight || 160;
+    const maxTop = Math.max(PANEL_MARGIN, viewportHeight - height - PANEL_MARGIN);
+
+    let top = state.placeBelow
+      ? rect.bottom + PANEL_MARGIN
+      : rect.top - height - PANEL_MARGIN;
+    if (top < PANEL_MARGIN) {
+      top = rect.bottom + PANEL_MARGIN;
+    }
+    top = Math.min(Math.max(PANEL_MARGIN, top), maxTop);
+
+    let left = rect.left;
+    left = Math.min(
+      Math.max(PANEL_MARGIN, left),
+      Math.max(PANEL_MARGIN, viewportWidth - width - PANEL_MARGIN)
+    );
+
+    state.panel.style.top = `${Math.round(top)}px`;
+    state.panel.style.left = `${Math.round(left)}px`;
+  }
+
+  function schedulePlacement(state) {
+    if (state.placeFrame !== null) {
+      return;
+    }
+    state.placeFrame = window.requestAnimationFrame(() => {
+      state.placeFrame = null;
+      if (activePanel === state) {
+        placePanel(state);
       }
     });
-  }
-
-  function flushPanelRender(panel) {
-    if (panel.renderFrame !== null) {
-      window.cancelAnimationFrame(panel.renderFrame);
-      panel.renderFrame = null;
-    }
-    renderPanelMarkdown(panel);
-  }
-
-  function showPanelError(panel, message) {
-    if (panel.renderFrame !== null) {
-      window.cancelAnimationFrame(panel.renderFrame);
-      panel.renderFrame = null;
-    }
-    panel.rawText = message || t("requestFailed");
-    panel.contentEl.classList.remove("ai-inline-streaming");
-    panel.contentEl.classList.add("ai-inline-plain");
-    panel.contentEl.textContent = panel.rawText;
-    panel.body.scrollTop = panel.body.scrollHeight;
-  }
-
-  function positionPanel(panel, range) {
-    const rect = range.getBoundingClientRect();
-    const width = Math.min(Math.max(rect.width, 340), 720);
-    panel.style.width = `${width}px`;
-
-    const panelHeight = panel.offsetHeight || 180;
-    const panelWidth = panel.offsetWidth || width;
-    const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
-    const scrollX = window.scrollX || document.documentElement.scrollLeft || 0;
-    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-
-    let top = scrollY + rect.bottom + 8;
-    if (rect.bottom + 8 + panelHeight > viewportHeight && rect.top - 8 - panelHeight > 0) {
-      top = scrollY + rect.top - panelHeight - 8;
-    }
-
-    const leftRaw = scrollX + rect.left;
-    const maxLeft = Math.max(8, document.documentElement.scrollWidth - panelWidth - 8);
-    const left = Math.min(Math.max(8, leftRaw), maxLeft);
-
-    panel.style.top = `${top}px`;
-    panel.style.left = `${left}px`;
   }
 
   function closePanel() {
-    if (activePort) {
-      try {
-        activePort.disconnect();
-      } catch {
-        // Ignore disconnection errors.
-      }
+    const state = activePanel;
+    if (!state) {
+      return;
+    }
+    activePanel = null;
+    releasePort(state);
+    state.cleanup();
+    state.panel.remove();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Streaming                                                           */
+  /* ------------------------------------------------------------------ */
+
+  function releasePort(state) {
+    const port = state.port;
+    state.port = null;
+    if (activePort === port) {
       activePort = null;
     }
-    if (activePanel) {
-      if (activePanel.renderFrame !== null) {
-        window.cancelAnimationFrame(activePanel.renderFrame);
+    if (port) {
+      try {
+        port.disconnect();
+      } catch {
+        // Already disconnected.
       }
-      activePanel.panel.remove();
-      activePanel = null;
     }
   }
 
-  function showToast(message) {
-    if (!document.body) {
+  function scheduleRender(state) {
+    if (state.renderFrame !== null) {
       return;
     }
-    const existing = document.querySelector(".ai-inline-toast");
-    if (existing) {
-      existing.remove();
+    state.renderFrame = window.requestAnimationFrame(() => {
+      state.renderFrame = null;
+      if (activePanel !== state) {
+        return;
+      }
+      state.renderer.update(state.rawText);
+      if (state.stickToBottom) {
+        state.body.scrollTop = state.body.scrollHeight;
+      }
+    });
+  }
+
+  function settlePanel(state) {
+    if (state.renderFrame !== null) {
+      window.cancelAnimationFrame(state.renderFrame);
+      state.renderFrame = null;
+    }
+    state.renderer.finish(state.rawText);
+    state.body.classList.remove("ai-inline-loading");
+    state.contentEl.classList.remove("ai-inline-streaming");
+    state.stopButton.hidden = true;
+    if (state.stickToBottom) {
+      state.body.scrollTop = state.body.scrollHeight;
+    }
+  }
+
+  function showPanelMessage(state, message, isError) {
+    state.renderer.finish(state.rawText);
+    state.contentEl.className = "ai-inline-content ai-inline-plain";
+    state.contentEl.textContent = message;
+    state.contentEl.classList.remove("ai-inline-streaming");
+    state.body.classList.remove("ai-inline-loading");
+    if (isError) {
+      state.body.classList.add("ai-inline-error");
+    }
+  }
+
+  function appendErrorNote(state, message) {
+    const note = document.createElement("p");
+    note.className = "ai-inline-error-note";
+    note.textContent = message;
+    state.contentEl.append(note);
+    state.body.classList.add("ai-inline-error");
+  }
+
+  function stopStreaming(state) {
+    if (state.finished) {
+      return;
+    }
+    state.stopped = true;
+    state.finished = true;
+    settlePanel(state);
+    releasePort(state);
+    state.title.textContent = `${state.baseTitle} · ${t("stopped")}`;
+  }
+
+  function copyText(text, button) {
+    if (!text) {
+      return;
     }
 
-    const toast = document.createElement("div");
-    toast.className = "ai-inline-toast";
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    toast.addEventListener("click", () => toast.remove());
+    const fallback = () => {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "-1000px";
+      textarea.style.opacity = "0";
+      document.documentElement.append(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        // Nothing else we can do.
+      }
+      textarea.remove();
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(fallback);
+    } else {
+      fallback();
+    }
+
+    button.textContent = t("copied");
+    window.setTimeout(() => {
+      button.textContent = t("copyReply");
+    }, 1200);
   }
 
   async function runPrompt(promptIndex, selectionData) {
-    const prompts = Array.isArray(currentSettings.prompts) ? currentSettings.prompts : [];
+    const prompts = Array.isArray(currentSettings.prompts)
+      ? currentSettings.prompts
+      : [];
     const promptConfig = prompts[promptIndex];
+
     if (!promptConfig || !String(promptConfig.prompt || "").trim()) {
       showToast(t("promptNotConfigured", [String(promptIndex + 1)]));
       return;
@@ -324,77 +526,89 @@
       showToast(t("configureBaseUrl"));
       return;
     }
-    if (!currentSettings.apiKey || !currentSettings.apiKey.trim()) {
-      showToast(t("configureApiKey"));
-      return;
-    }
     if (!currentSettings.model || !currentSettings.model.trim()) {
       showToast(t("configureModel"));
       return;
     }
 
-    const panel = createPanel(
+    let selection = selectionData.text;
+    if (selection.length > MAX_SELECTION_LENGTH) {
+      selection = selection.slice(0, MAX_SELECTION_LENGTH);
+    }
+
+    const state = createPanel(
       promptConfig.name || t("promptFallback", [String(promptIndex + 1)]),
       selectionData.range
     );
 
-    const port = chrome.runtime.connect({ name: "ai-inline-stream" });
-    activePort = port;
+    let port;
+    try {
+      port = chrome.runtime.connect({ name: "ai-inline-stream" });
+    } catch {
+      showPanelMessage(state, t("operationFailed"), true);
+      return;
+    }
 
+    state.port = port;
+    activePort = port;
     let receivedChunk = false;
-    let finished = false;
 
     const finish = () => {
-      if (finished) {
+      if (state.finished) {
         return;
       }
-      finished = true;
-      panel.body.classList.remove("ai-inline-loading");
-      panel.contentEl.classList.remove("ai-inline-streaming");
-      if (activePort === port) {
-        activePort = null;
-      }
-      try {
-        port.disconnect();
-      } catch {
-        // Ignore disconnection errors.
-      }
+      state.finished = true;
+      settlePanel(state);
+      releasePort(state);
     };
 
     port.onMessage.addListener((message) => {
-      if (!message) {
+      if (!message || activePanel !== state) {
         return;
       }
 
       if (message.type === "chunk") {
         if (!receivedChunk) {
           receivedChunk = true;
-          panel.body.classList.remove("ai-inline-loading");
+          state.body.classList.remove("ai-inline-loading");
         }
-        panel.rawText += message.text;
-        schedulePanelRender(panel);
-      } else if (message.type === "done") {
-        flushPanelRender(panel);
+        state.rawText += message.text;
+        scheduleRender(state);
+        return;
+      }
+
+      if (message.type === "done") {
         finish();
-      } else if (message.type === "error") {
-        panel.body.classList.remove("ai-inline-loading");
-        panel.body.classList.add("ai-inline-error");
-        showPanelError(panel, message.message || t("requestFailed"));
+        if (!state.rawText) {
+          showPanelMessage(state, t("emptyResponse"), false);
+        }
+        return;
+      }
+
+      if (message.type === "error") {
         finish();
+        if (state.rawText) {
+          appendErrorNote(state, message.message || t("requestFailed"));
+        } else {
+          showPanelMessage(state, message.message || t("requestFailed"), true);
+        }
       }
     });
 
     port.onDisconnect.addListener(() => {
-      if (!finished && activePort === port) {
-        panel.body.classList.remove("ai-inline-loading");
-        panel.body.classList.add("ai-inline-error");
-        if (!panel.rawText) {
-          showPanelError(panel, t("connectionInterrupted"));
-        } else {
-          flushPanelRender(panel);
-          panel.contentEl.classList.remove("ai-inline-streaming");
-        }
-        finish();
+      if (activePanel !== state || state.finished) {
+        return;
+      }
+      state.finished = true;
+      settlePanel(state);
+      state.port = null;
+      if (activePort === port) {
+        activePort = null;
+      }
+      if (state.rawText) {
+        appendErrorNote(state, t("connectionInterrupted"));
+      } else {
+        showPanelMessage(state, t("connectionInterrupted"), true);
       }
     });
 
@@ -402,14 +616,55 @@
       type: "start",
       request: {
         promptIndex,
-        selection: selectionData.text
+        selection
       }
     });
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Toast                                                               */
+  /* ------------------------------------------------------------------ */
+
+  function showToast(message) {
+    if (!document.body) {
+      return;
+    }
+    const existing = document.querySelector(".ai-inline-toast");
+    if (existing) {
+      existing.remove();
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "ai-inline-toast";
+    toast.setAttribute("role", "status");
+    toast.textContent = message;
+    document.body.append(toast);
+
+    const dismiss = () => toast.remove();
+    toast.addEventListener("click", dismiss);
+    window.setTimeout(dismiss, TOAST_DURATION);
+  }
+
+  function hintNoSelection() {
+    const now = Date.now();
+    if (now - lastHintAt < NO_SELECTION_HINT_INTERVAL) {
+      return;
+    }
+    lastHintAt = now;
+    showToast(t("noSelection"));
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Global listeners                                                    */
+  /* ------------------------------------------------------------------ */
+
   window.addEventListener(
     "keydown",
     (event) => {
+      if (event.defaultPrevented || event.isComposing) {
+        return;
+      }
+
       const number = digitFromEvent(event);
       if (number === null || number < 1 || number > 9) {
         return;
@@ -417,22 +672,35 @@
       if (!matchesModifier(event, currentSettings.modifier)) {
         return;
       }
-      if (event.repeat) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
+
+      const promptIndex = number - 1;
+      const prompts = Array.isArray(currentSettings.prompts)
+        ? currentSettings.prompts
+        : [];
+      const promptConfig = prompts[promptIndex];
+      if (
+        !promptConfig ||
+        !String(promptConfig.prompt || "").trim() ||
+        promptConfig.enabled === false
+      ) {
+        return;
+      }
+
+      const selectionData = getSelectionData();
+      if (!selectionData) {
+        // Never swallow a key the page may own when there is nothing to act on.
+        hintNoSelection();
         return;
       }
 
       event.preventDefault();
       event.stopImmediatePropagation();
 
-      const selectionData = getSelectionData();
-      if (!selectionData) {
-        showToast(t("noSelection"));
+      if (event.repeat) {
         return;
       }
 
-      runPrompt(number - 1, selectionData).catch(() => {
+      runPrompt(promptIndex, selectionData).catch(() => {
         showToast(t("operationFailed"));
       });
     },
@@ -440,20 +708,33 @@
   );
 
   document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key !== "Escape" || !activePanel) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      closePanel();
+    },
+    true
+  );
+
+  document.addEventListener(
     "mousedown",
     (event) => {
-      if (
-        event.button === 0 &&
-        activePanel &&
-        !(event.target && event.target.closest && event.target.closest(".ai-inline-actions"))
-      ) {
-        closePanel();
+      if (event.button !== 0 || !activePanel) {
+        return;
       }
+      if (event.target && activePanel.panel.contains(event.target)) {
+        return;
+      }
+      closePanel();
     },
     true
   );
 
   loadSettings().catch(() => {
-    // Storage access can fail in rare cases; keep defaults.
+    // Storage can be unavailable in rare cases; the defaults remain usable.
   });
 })();

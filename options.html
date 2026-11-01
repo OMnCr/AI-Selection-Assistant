@@ -11,32 +11,71 @@
       <header class="page-header">
         <div>
           <h1 data-i18n="extName">AI Selection Assistant</h1>
-          <p class="subtitle" data-i18n="subtitle">Select text, use a shortcut plus 1/2/3…, and stream the AI response.</p>
+          <p class="subtitle" data-i18n="subtitle">
+            Select text, use a shortcut plus 1/2/3…, and stream the AI response.
+          </p>
         </div>
-        <button id="save-top" class="primary" type="button" data-i18n="saveSettings">Save settings</button>
+        <button id="save-top" class="primary" type="button" data-i18n="saveSettings">
+          Save settings
+        </button>
       </header>
 
       <section class="card">
         <h2 data-i18n="interfaceConfig">API configuration</h2>
         <div class="field">
           <label for="baseUrl">Base URL</label>
-          <input id="baseUrl" type="text" spellcheck="false" placeholder="https://api.openai.com/v1" />
-          <p class="hint" data-i18n="baseUrlHint">Works with OpenAI-compatible Chat Completions APIs. Enter the URL through /v1, or paste a full /chat/completions endpoint.</p>
+          <input
+            id="baseUrl"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="https://api.openai.com/v1"
+          />
+          <p class="hint" data-i18n="baseUrlHint">
+            Works with OpenAI-compatible Chat Completions APIs. Enter the URL through /v1, or
+            paste a full /chat/completions endpoint.
+          </p>
         </div>
         <div class="field">
           <label for="apiKey">API Key</label>
-          <input id="apiKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-..." />
+          <div class="input-with-action">
+            <input
+              id="apiKey"
+              type="password"
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="sk-..."
+            />
+            <button id="toggle-api-key" type="button" class="ghost" data-i18n="showApiKey">
+              Show
+            </button>
+          </div>
+          <p class="hint" data-i18n="apiKeyOptionalHint">
+            Leave empty for local or unauthenticated endpoints; no Authorization header is sent
+            when the field is blank.
+          </p>
         </div>
         <div class="model-row">
           <div class="field model-field">
             <label for="model" data-i18n="modelName">Model</label>
-            <input id="model" type="text" spellcheck="false" placeholder="gpt-4o-mini" list="model-list" />
+            <input
+              id="model"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="gpt-4o-mini"
+              list="model-list"
+            />
             <datalist id="model-list"></datalist>
-            <p class="hint" data-i18n="modelHint">After entering a Base URL, you can fetch the models supported by this API.</p>
+            <p class="hint" data-i18n="modelHint">
+              After entering a Base URL, you can fetch the models supported by this API.
+            </p>
           </div>
           <div class="field model-actions">
             <label data-i18n="modelList">Model list</label>
-            <button id="fetch-models" type="button" class="secondary" data-i18n="fetchModels">Fetch models</button>
+            <button id="fetch-models" type="button" class="secondary" data-i18n="fetchModels">
+              Fetch models
+            </button>
             <p id="model-list-result" class="hint" role="status"></p>
           </div>
         </div>
@@ -51,11 +90,21 @@
               <option value="alt+shift" data-i18n="modifierAltShift">Alt + Shift + number</option>
               <option value="meta" data-i18n="modifierMeta">Meta + number</option>
             </select>
-            <p class="hint" data-i18n="modifierHint">For example, Alt + number makes Alt+1 use the first prompt. Some combinations may be reserved by the browser, such as Ctrl + number for switching tabs.</p>
+            <p class="hint" data-i18n="modifierHint">
+              For example, Alt + number makes Alt+1 use the first prompt. Some combinations may be
+              reserved by the browser, such as Ctrl + number for switching tabs.
+            </p>
           </div>
           <div class="field">
             <label data-i18n="connectionTest">Connection test</label>
-            <button id="test-connection" type="button" class="secondary" data-i18n="testCurrentApi">Test current API</button>
+            <button
+              id="test-connection"
+              type="button"
+              class="secondary"
+              data-i18n="testCurrentApi"
+            >
+              Test current API
+            </button>
             <p id="test-result" class="hint" role="status"></p>
           </div>
         </div>
@@ -78,15 +127,38 @@
           </div>
           <div class="field">
             <label for="temperature" data-i18n="temperatureLabel">Temperature</label>
-            <input id="temperature" type="number" step="0.1" min="0" max="2" data-i18n-placeholder="defaultParamPlaceholder" placeholder="Leave empty to use the API default" />
+            <input
+              id="temperature"
+              type="number"
+              step="0.1"
+              min="0"
+              max="2"
+              data-i18n-placeholder="defaultParamPlaceholder"
+              placeholder="Leave empty to use the API default"
+            />
           </div>
           <div class="field">
-            <label for="topP">Top P</label>
-            <input id="topP" type="number" step="0.01" min="0" max="1" data-i18n-placeholder="defaultParamPlaceholder" placeholder="Leave empty to use the API default" />
+            <label for="topP" data-i18n="topPLabel">Top P</label>
+            <input
+              id="topP"
+              type="number"
+              step="0.01"
+              min="0"
+              max="1"
+              data-i18n-placeholder="defaultParamPlaceholder"
+              placeholder="Leave empty to use the API default"
+            />
           </div>
           <div class="field">
             <label for="maxTokens" data-i18n="maxTokensLabel">Max tokens</label>
-            <input id="maxTokens" type="number" step="1" min="1" data-i18n-placeholder="defaultParamPlaceholder" placeholder="Leave empty to use the API default" />
+            <input
+              id="maxTokens"
+              type="number"
+              step="1"
+              min="1"
+              data-i18n-placeholder="defaultParamPlaceholder"
+              placeholder="Leave empty to use the API default"
+            />
           </div>
         </div>
       </section>
@@ -95,16 +167,32 @@
         <div class="section-title">
           <div>
             <h2 data-i18n="promptShortcuts">Prompt shortcuts</h2>
-            <p class="hint" data-i18n="promptHelp">Items 1–9 map to shortcut + 1 through shortcut + 9. Use {{selection}} where the selected text should appear. If omitted, the selection is appended to the end.</p>
+            <p class="hint" data-i18n="promptHelp">
+              Items 1–9 map to shortcut + 1 through shortcut + 9. Use {{selection}} where the
+              selected text should appear. If omitted, the selection is appended to the end.
+            </p>
           </div>
-          <button id="restore-defaults" type="button" class="secondary" data-i18n="restoreDefaults">Restore default prompts</button>
+          <button id="restore-defaults" type="button" class="secondary" data-i18n="restoreDefaults">
+            Restore default prompts
+          </button>
         </div>
         <div id="prompt-list" class="prompt-list"></div>
       </section>
 
       <footer class="page-footer">
-        <button id="save-bottom" class="primary" type="button" data-i18n="saveSettings">Save settings</button>
-        <span id="save-status" role="status"></span>
+        <button id="save-bottom" class="primary" type="button" data-i18n="saveSettings">
+          Save settings
+        </button>
+        <span id="save-status" role="status" aria-live="polite"></span>
+        <span class="footer-meta">
+          <span id="version"></span>
+          <a
+            href="https://github.com/OMnCr/Lightweight-custom-AI-Q-A-plugin"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub</a
+          >
+        </span>
       </footer>
     </main>
 

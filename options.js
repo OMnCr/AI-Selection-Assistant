@@ -29,6 +29,10 @@ const DEFAULT_SETTINGS = {
 const promptList = document.getElementById("prompt-list");
 const saveStatus = document.getElementById("save-status");
 const testResult = document.getElementById("test-result");
+const baseUrlInput = document.getElementById("baseUrl");
+const apiKeyInput = document.getElementById("apiKey");
+const modelInput = document.getElementById("model");
+const toggleApiKey = document.getElementById("toggle-api-key");
 
 function cloneSettings(value) {
   return JSON.parse(JSON.stringify(value));
@@ -48,15 +52,28 @@ function modifierLabel(modifier) {
   return labels[modifier] || "Alt";
 }
 
+function showVersion() {
+  const version = document.getElementById("version");
+  if (!version) {
+    return;
+  }
+  try {
+    version.textContent = `v${chrome.runtime.getManifest().version}`;
+  } catch {
+    version.textContent = "";
+  }
+}
+
 async function loadSettings() {
   const stored = await chrome.storage.local.get("settings");
   const raw = stored.settings || {};
   settings = {
     ...DEFAULT_SETTINGS,
     ...raw,
-    prompts: Array.isArray(raw.prompts) && raw.prompts.length
-      ? raw.prompts
-      : cloneSettings(DEFAULT_SETTINGS.prompts)
+    prompts:
+      Array.isArray(raw.prompts) && raw.prompts.length
+        ? raw.prompts
+        : cloneSettings(DEFAULT_SETTINGS.prompts)
   };
 
   while (settings.prompts.length < 9) {
@@ -77,15 +94,16 @@ async function loadSettings() {
 
 function render() {
   const shortcutLabel = modifierLabel(settings.modifier);
-  document.getElementById("baseUrl").value = settings.baseUrl;
-  document.getElementById("apiKey").value = settings.apiKey;
-  document.getElementById("model").value = settings.model;
+  baseUrlInput.value = settings.baseUrl;
+  apiKeyInput.value = settings.apiKey;
+  modelInput.value = settings.model;
   document.getElementById("modifier").value = settings.modifier;
   document.getElementById("stream").checked = settings.stream !== false;
   document.getElementById("temperature").value = settings.temperature || "";
   document.getElementById("topP").value = settings.topP || "";
   document.getElementById("maxTokens").value = settings.maxTokens || "";
-  document.getElementById("reasoningEffort").value = settings.reasoningEffort || "none";
+  document.getElementById("reasoningEffort").value =
+    settings.reasoningEffort || "none";
 
   promptList.replaceChildren();
   settings.prompts.forEach((prompt, index) => {
@@ -141,9 +159,15 @@ function render() {
 
 function collectSettings() {
   const prompts = settings.prompts.map((prompt, index) => {
-    const nameInput = promptList.querySelector(`.prompt-name-input[data-index="${index}"]`);
-    const promptInput = promptList.querySelector(`.prompt-prompt-input[data-index="${index}"]`);
-    const enabledInput = promptList.querySelector(`.prompt-enabled-input[data-index="${index}"]`);
+    const nameInput = promptList.querySelector(
+      `.prompt-name-input[data-index="${index}"]`
+    );
+    const promptInput = promptList.querySelector(
+      `.prompt-prompt-input[data-index="${index}"]`
+    );
+    const enabledInput = promptList.querySelector(
+      `.prompt-enabled-input[data-index="${index}"]`
+    );
     return {
       id: prompt.id || `prompt-${index + 1}`,
       name: nameInput ? nameInput.value.trim() : prompt.name,
@@ -153,9 +177,9 @@ function collectSettings() {
   });
 
   return {
-    baseUrl: document.getElementById("baseUrl").value.trim(),
-    apiKey: document.getElementById("apiKey").value.trim(),
-    model: document.getElementById("model").value.trim(),
+    baseUrl: baseUrlInput.value.trim(),
+    apiKey: apiKeyInput.value.trim(),
+    model: modelInput.value.trim(),
     modifier: document.getElementById("modifier").value,
     stream: document.getElementById("stream").checked,
     temperature: document.getElementById("temperature").value.trim(),
@@ -166,63 +190,139 @@ function collectSettings() {
   };
 }
 
+function clearFieldErrors() {
+  document.querySelectorAll(".field.has-error").forEach((field) => {
+    field.classList.remove("has-error");
+  });
+  document.querySelectorAll("[aria-invalid='true']").forEach((element) => {
+    element.removeAttribute("aria-invalid");
+  });
+}
+
+function markFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  if (field) {
+    field.setAttribute("aria-invalid", "true");
+    const wrapper = field.closest(".field");
+    if (wrapper) {
+      wrapper.classList.add("has-error");
+    }
+    field.focus();
+  }
+  setStatus(saveStatus, message, true);
+}
+
+function setStatus(element, message, isError) {
+  if (!element) {
+    return;
+  }
+  element.textContent = message;
+  element.classList.toggle("error", Boolean(isError));
+  element.classList.toggle("ok", !isError && Boolean(message));
+}
+
+function parseOptionalNumber(value) {
+  if (value === "") {
+    return null;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? number : Number.NaN;
+}
+
+function validate(draft) {
+  if (!draft.baseUrl) {
+    return { fieldId: "baseUrl", message: t("baseUrlRequiredShort") };
+  }
+  try {
+    const url = new URL(draft.baseUrl);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error("unsupported protocol");
+    }
+  } catch {
+    return { fieldId: "baseUrl", message: t("baseUrlInvalidShort") };
+  }
+  if (!draft.model) {
+    return { fieldId: "model", message: t("modelRequired") };
+  }
+
+  const temperature = parseOptionalNumber(draft.temperature);
+  if (Number.isNaN(temperature) || (temperature !== null && (temperature < 0 || temperature > 2))) {
+    return { fieldId: "temperature", message: t("invalidTemperature") };
+  }
+
+  const topP = parseOptionalNumber(draft.topP);
+  if (Number.isNaN(topP) || (topP !== null && (topP < 0 || topP > 1))) {
+    return { fieldId: "topP", message: t("invalidTopP") };
+  }
+
+  const maxTokens = parseOptionalNumber(draft.maxTokens);
+  if (
+    Number.isNaN(maxTokens) ||
+    (maxTokens !== null && (!Number.isInteger(maxTokens) || maxTokens < 1))
+  ) {
+    return { fieldId: "maxTokens", message: t("invalidMaxTokens") };
+  }
+
+  return null;
+}
+
 async function saveSettings() {
-  settings = collectSettings();
-  await chrome.storage.local.set({ settings });
-  saveStatus.textContent = t("saved");
-  window.setTimeout(() => {
-    saveStatus.textContent = "";
-  }, 1800);
+  clearFieldErrors();
+  const draft = collectSettings();
+  const problem = validate(draft);
+  if (problem) {
+    markFieldError(problem.fieldId, problem.message);
+    return;
+  }
+
+  settings = draft;
+  try {
+    await chrome.storage.local.set({ settings });
+    setStatus(saveStatus, t("saved"), false);
+    window.setTimeout(() => setStatus(saveStatus, "", false), 1800);
+  } catch (error) {
+    setStatus(saveStatus, error.message || t("saveFailed"), true);
+  }
 }
 
 async function restoreDefaults() {
   settings.prompts = cloneSettings(DEFAULT_SETTINGS.prompts);
   render();
-  await saveSettings();
-  saveStatus.textContent = t("defaultsRestored");
-  window.setTimeout(() => {
-    saveStatus.textContent = "";
-  }, 1800);
+  await chrome.storage.local.set({ settings: collectSettings() });
+  setStatus(saveStatus, t("defaultsRestored"), false);
+  window.setTimeout(() => setStatus(saveStatus, "", false), 1800);
 }
 
 async function testConnection() {
   const current = collectSettings();
-  if (!current.baseUrl || !current.apiKey || !current.model) {
-    testResult.className = "error";
-    testResult.textContent = t("fillBaseUrlKeyModel");
+  if (!current.baseUrl || !current.model) {
+    setStatus(testResult, t("fillBaseUrlKeyModel"), true);
     return;
   }
 
-  testResult.className = "";
-  testResult.textContent = t("testing");
-
+  setStatus(testResult, t("testing"), false);
   try {
     const response = await chrome.runtime.sendMessage({
       type: "ai-inline-test-connection",
       request: current
     });
-    testResult.className = response.ok ? "ok" : "error";
-    testResult.textContent = response.message;
+    setStatus(testResult, response.message, !response.ok);
   } catch (error) {
-    testResult.className = "error";
-    testResult.textContent = error.message || String(error);
+    setStatus(testResult, error.message || String(error), true);
   }
 }
 
 async function fetchModels() {
   const result = document.getElementById("model-list-result");
-  const baseUrl = document.getElementById("baseUrl").value.trim();
-  const apiKey = document.getElementById("apiKey").value.trim();
+  const baseUrl = baseUrlInput.value.trim();
+  const apiKey = apiKeyInput.value.trim();
 
   if (!baseUrl) {
-    result.className = "error";
-    result.textContent = t("baseUrlRequiredShort");
+    setStatus(result, t("baseUrlRequiredShort"), true);
     return;
   }
 
-  result.className = "";
-  result.textContent = t("fetchingModels");
-
+  setStatus(result, t("fetchingModels"), false);
   try {
     const response = await chrome.runtime.sendMessage({
       type: "ai-inline-list-models",
@@ -230,8 +330,7 @@ async function fetchModels() {
     });
 
     if (!response.ok) {
-      result.className = "error";
-      result.textContent = response.message;
+      setStatus(result, response.message, true);
       return;
     }
 
@@ -243,20 +342,26 @@ async function fetchModels() {
       datalist.append(option);
     }
 
-    result.className = "ok";
-    result.textContent = response.models.length
-      ? t("modelsFetched", [String(response.models.length)])
-      : t("noModelsReturned");
+    setStatus(
+      result,
+      response.models.length
+        ? t("modelsFetched", [String(response.models.length)])
+        : t("noModelsReturned"),
+      false
+    );
   } catch (error) {
-    result.className = "error";
-    result.textContent = error.message || String(error);
+    setStatus(result, error.message || String(error), true);
   }
 }
 
 document.getElementById("save-top").addEventListener("click", saveSettings);
 document.getElementById("save-bottom").addEventListener("click", saveSettings);
-document.getElementById("restore-defaults").addEventListener("click", restoreDefaults);
-document.getElementById("test-connection").addEventListener("click", testConnection);
+document
+  .getElementById("restore-defaults")
+  .addEventListener("click", restoreDefaults);
+document
+  .getElementById("test-connection")
+  .addEventListener("click", testConnection);
 document.getElementById("fetch-models").addEventListener("click", fetchModels);
 document.getElementById("modifier").addEventListener("change", () => {
   settings.modifier = document.getElementById("modifier").value;
@@ -266,16 +371,31 @@ document.getElementById("modifier").addEventListener("change", () => {
   });
 });
 
-const baseUrlInput = document.getElementById("baseUrl");
+toggleApiKey.addEventListener("click", () => {
+  const revealed = apiKeyInput.type === "text";
+  apiKeyInput.type = revealed ? "password" : "text";
+  toggleApiKey.textContent = revealed ? t("showApiKey") : t("hideApiKey");
+});
+
 let lastBaseUrl = baseUrlInput.value;
 baseUrlInput.addEventListener("blur", () => {
   const nextBaseUrl = baseUrlInput.value.trim();
-  if (nextBaseUrl && nextBaseUrl !== lastBaseUrl && document.getElementById("apiKey").value.trim()) {
+  if (nextBaseUrl && nextBaseUrl !== lastBaseUrl && apiKeyInput.value.trim()) {
     fetchModels();
   }
   lastBaseUrl = nextBaseUrl;
 });
 
+[baseUrlInput, modelInput].forEach((input) => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      saveSettings();
+    }
+  });
+});
+
+showVersion();
 loadSettings().catch(() => {
-  saveStatus.textContent = t("readSettingsFailed");
+  setStatus(saveStatus, t("readSettingsFailed"), true);
 });

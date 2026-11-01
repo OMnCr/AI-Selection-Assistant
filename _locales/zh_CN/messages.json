@@ -68,8 +68,23 @@
   "copied": {
     "message": "已复制"
   },
+  "stopGenerating": {
+    "message": "停止"
+  },
+  "stopped": {
+    "message": "已停止"
+  },
+  "closePanel": {
+    "message": "关闭面板"
+  },
   "requestFailed": {
     "message": "请求失败"
+  },
+  "emptyResponse": {
+    "message": "模型没有返回任何内容。"
+  },
+  "requestTimeout": {
+    "message": "请求超时，请检查接口地址后重试。"
   },
   "pageNotReady": {
     "message": "页面尚未准备好"
@@ -92,9 +107,6 @@
   },
   "configureBaseUrl": {
     "message": "请先在扩展选项中配置 Base URL"
-  },
-  "configureApiKey": {
-    "message": "请先在扩展选项中配置 API Key"
   },
   "configureModel": {
     "message": "请先在扩展选项中配置模型名称"
@@ -125,11 +137,11 @@
   "baseUrlInvalid": {
     "message": "Base URL 格式无效，请填写完整地址，例如 https://api.openai.com/v1。"
   },
+  "baseUrlInvalidShort": {
+    "message": "请填写完整的 http(s) 地址，例如 https://api.openai.com/v1"
+  },
   "baseUrlFill": {
     "message": "请先填写 Base URL。"
-  },
-  "apiKeyRequired": {
-    "message": "请先在扩展选项中配置 API Key。"
   },
   "modelRequired": {
     "message": "请先在扩展选项中配置模型名称。"
@@ -176,11 +188,29 @@
   "saveSettings": {
     "message": "保存设置"
   },
+  "saved": {
+    "message": "已保存"
+  },
+  "saveFailed": {
+    "message": "保存设置失败"
+  },
+  "defaultsRestored": {
+    "message": "已恢复默认提示词"
+  },
   "interfaceConfig": {
     "message": "接口配置"
   },
   "baseUrlHint": {
     "message": "兼容 OpenAI Chat Completions 接口。填写到 /v1 即可，也可直接填写完整的 /chat/completions 地址。"
+  },
+  "apiKeyOptionalHint": {
+    "message": "本地或无需鉴权的接口可以留空；留空时请求不携带 Authorization 头。"
+  },
+  "showApiKey": {
+    "message": "显示"
+  },
+  "hideApiKey": {
+    "message": "隐藏"
   },
   "modelName": {
     "message": "模型名称"
@@ -193,6 +223,20 @@
   },
   "modelHint": {
     "message": "填写 Base URL 后可获取该接口支持的模型列表。"
+  },
+  "fetchingModels": {
+    "message": "正在获取模型列表…"
+  },
+  "modelsFetched": {
+    "message": "已获取 $COUNT$ 个模型，可点击模型输入框选择。",
+    "placeholders": {
+      "COUNT": {
+        "content": "$1"
+      }
+    }
+  },
+  "noModelsReturned": {
+    "message": "接口没有返回模型列表。"
   },
   "modifierLabel": {
     "message": "快捷键修饰键"
@@ -224,6 +268,12 @@
   "testCurrentApi": {
     "message": "测试当前接口"
   },
+  "testing": {
+    "message": "正在测试…"
+  },
+  "fillBaseUrlKeyModel": {
+    "message": "请先填写 Base URL 和模型名称"
+  },
   "streamLabel": {
     "message": "流式传输"
   },
@@ -254,6 +304,15 @@
   "maxTokensLabel": {
     "message": "最大 Token 数"
   },
+  "invalidTemperature": {
+    "message": "温度必须在 0 到 2 之间。"
+  },
+  "invalidTopP": {
+    "message": "Top P 必须在 0 到 1 之间。"
+  },
+  "invalidMaxTokens": {
+    "message": "最大 Token 数必须是正整数。"
+  },
   "defaultParamPlaceholder": {
     "message": "留空使用接口默认值"
   },
@@ -275,34 +334,8 @@
   "promptTemplate": {
     "message": "提示词模板"
   },
-  "saved": {
-    "message": "已保存"
-  },
-  "defaultsRestored": {
-    "message": "已恢复默认设置"
-  },
-  "fillBaseUrlKeyModel": {
-    "message": "请先填写 Base URL、API Key 和模型名称"
-  },
-  "testing": {
-    "message": "正在测试…"
-  },
   "baseUrlRequiredShort": {
     "message": "请先填写 Base URL"
-  },
-  "fetchingModels": {
-    "message": "正在获取模型列表…"
-  },
-  "modelsFetched": {
-    "message": "已获取 $COUNT$ 个模型，可点击模型输入框选择。",
-    "placeholders": {
-      "COUNT": {
-        "content": "$1"
-      }
-    }
-  },
-  "noModelsReturned": {
-    "message": "接口没有返回模型列表。"
   },
   "readSettingsFailed": {
     "message": "读取设置失败"

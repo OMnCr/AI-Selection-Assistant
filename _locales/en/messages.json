@@ -68,8 +68,23 @@
   "copied": {
     "message": "Copied"
   },
+  "stopGenerating": {
+    "message": "Stop"
+  },
+  "stopped": {
+    "message": "Stopped"
+  },
+  "closePanel": {
+    "message": "Close panel"
+  },
   "requestFailed": {
     "message": "Request failed"
+  },
+  "emptyResponse": {
+    "message": "The model returned an empty response."
+  },
+  "requestTimeout": {
+    "message": "The request timed out. Check the API endpoint and try again."
   },
   "pageNotReady": {
     "message": "The page is not ready"
@@ -92,9 +107,6 @@
   },
   "configureBaseUrl": {
     "message": "Configure Base URL in the extension options"
-  },
-  "configureApiKey": {
-    "message": "Configure API Key in the extension options"
   },
   "configureModel": {
     "message": "Configure a model name in the extension options"
@@ -125,11 +137,11 @@
   "baseUrlInvalid": {
     "message": "Invalid Base URL. Enter a full URL such as https://api.openai.com/v1."
   },
+  "baseUrlInvalidShort": {
+    "message": "Enter a full http(s) URL, for example https://api.openai.com/v1"
+  },
   "baseUrlFill": {
     "message": "Enter a Base URL first."
-  },
-  "apiKeyRequired": {
-    "message": "Configure API Key in the extension options."
   },
   "modelRequired": {
     "message": "Configure a model name in the extension options."
@@ -176,11 +188,29 @@
   "saveSettings": {
     "message": "Save settings"
   },
+  "saved": {
+    "message": "Saved"
+  },
+  "saveFailed": {
+    "message": "Could not save settings"
+  },
+  "defaultsRestored": {
+    "message": "Default prompts restored"
+  },
   "interfaceConfig": {
     "message": "API configuration"
   },
   "baseUrlHint": {
     "message": "Works with OpenAI-compatible Chat Completions APIs. Enter the URL through /v1, or paste a full /chat/completions endpoint."
+  },
+  "apiKeyOptionalHint": {
+    "message": "Leave empty for local or unauthenticated endpoints; no Authorization header is sent when the field is blank."
+  },
+  "showApiKey": {
+    "message": "Show"
+  },
+  "hideApiKey": {
+    "message": "Hide"
   },
   "modelName": {
     "message": "Model"
@@ -193,6 +223,20 @@
   },
   "modelHint": {
     "message": "After entering a Base URL, you can fetch the models supported by this API."
+  },
+  "fetchingModels": {
+    "message": "Fetching model list…"
+  },
+  "modelsFetched": {
+    "message": "Fetched $COUNT$ models. Click the model field to choose one.",
+    "placeholders": {
+      "COUNT": {
+        "content": "$1"
+      }
+    }
+  },
+  "noModelsReturned": {
+    "message": "The API did not return a model list."
   },
   "modifierLabel": {
     "message": "Shortcut modifier"
@@ -224,6 +268,12 @@
   "testCurrentApi": {
     "message": "Test current API"
   },
+  "testing": {
+    "message": "Testing…"
+  },
+  "fillBaseUrlKeyModel": {
+    "message": "Enter a Base URL and model name first"
+  },
   "streamLabel": {
     "message": "Streaming"
   },
@@ -254,6 +304,15 @@
   "maxTokensLabel": {
     "message": "Max tokens"
   },
+  "invalidTemperature": {
+    "message": "Temperature must be between 0 and 2."
+  },
+  "invalidTopP": {
+    "message": "Top P must be between 0 and 1."
+  },
+  "invalidMaxTokens": {
+    "message": "Max tokens must be a positive integer."
+  },
   "defaultParamPlaceholder": {
     "message": "Leave empty to use the API default"
   },
@@ -275,34 +334,8 @@
   "promptTemplate": {
     "message": "Prompt template"
   },
-  "saved": {
-    "message": "Saved"
-  },
-  "defaultsRestored": {
-    "message": "Default prompts restored"
-  },
-  "fillBaseUrlKeyModel": {
-    "message": "Enter Base URL, API Key, and model name first"
-  },
-  "testing": {
-    "message": "Testing…"
-  },
   "baseUrlRequiredShort": {
     "message": "Enter a Base URL first"
-  },
-  "fetchingModels": {
-    "message": "Fetching model list…"
-  },
-  "modelsFetched": {
-    "message": "Fetched $COUNT$ models. Click the model field to choose one.",
-    "placeholders": {
-      "COUNT": {
-        "content": "$1"
-      }
-    }
-  },
-  "noModelsReturned": {
-    "message": "The API did not return a model list."
   },
   "readSettingsFailed": {
     "message": "Failed to read settings"

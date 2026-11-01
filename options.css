@@ -152,6 +152,32 @@ textarea {
   line-height: 1.5;
 }
 
+.input-with-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-with-action input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+button.ghost {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  color: var(--muted);
+  background: var(--surface-subtle);
+  font-size: 13px;
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+
 .section-title {
   display: flex;
   align-items: flex-start;
@@ -250,8 +276,27 @@ textarea {
 
 .page-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+}
+
+.footer-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.footer-meta a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer-meta a:hover {
+  text-decoration: underline;
 }
 
 button {
@@ -288,14 +333,22 @@ button.primary:hover {
 }
 
 #save-status,
+#save-status.ok,
 #model-list-result.ok,
 #test-result.ok {
   color: var(--success);
 }
 
+#save-status.error,
 #model-list-result.error,
 #test-result.error {
   color: var(--danger);
+}
+
+@media (max-width: 1080px) {
+  .params-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 820px) {
