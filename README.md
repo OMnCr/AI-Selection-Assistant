@@ -137,4 +137,3 @@ scripts/             图标生成、清单校验、ZIP 打包
 - 许可证：[GNU Affero General Public License v3.0](LICENSE)
 - 公式渲染使用本地打包的 [KaTeX](https://katex.org/)，许可证见 [vendor/katex/LICENSE](vendor/katex/LICENSE)。
 
-本扩展适用于 Chrome 和 Microsoft Edge（Chromium）应用商店。
