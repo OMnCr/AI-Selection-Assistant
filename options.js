@@ -1,3 +1,18 @@
+const t = AIInlineI18n.t;
+
+function applyStaticTranslations() {
+  document.documentElement.lang = AIInlineI18n.locale;
+  document.title = t("optionsTitle");
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+}
+
+applyStaticTranslations();
+
 const DEFAULT_SETTINGS = {
   baseUrl: "https://api.openai.com/v1",
   apiKey: "",
@@ -8,17 +23,7 @@ const DEFAULT_SETTINGS = {
   topP: "",
   maxTokens: "",
   reasoningEffort: "none",
-  prompts: [
-    { id: "prompt-1", name: "总结", enabled: true, prompt: "请用简洁的中文总结下面的内容：\n\n{{selection}}" },
-    { id: "prompt-2", name: "翻译", enabled: true, prompt: "请把下面的内容翻译成中文：\n\n{{selection}}" },
-    { id: "prompt-3", name: "解释", enabled: true, prompt: "请解释下面这段内容，尽量通俗易懂：\n\n{{selection}}" },
-    { id: "prompt-4", name: "润色", enabled: true, prompt: "请在不改变原意的前提下润色下面的文字：\n\n{{selection}}" },
-    { id: "prompt-5", name: "提取要点", enabled: true, prompt: "请提取下面内容的关键要点，并使用无序列表输出：\n\n{{selection}}" },
-    { id: "prompt-6", name: "改写", enabled: true, prompt: "请用另一种表达方式改写下面的内容：\n\n{{selection}}" },
-    { id: "prompt-7", name: "回答问题", enabled: true, prompt: "请基于下面的内容回答问题：\n\n{{selection}}" },
-    { id: "prompt-8", name: "生成标题", enabled: true, prompt: "请为下面的内容生成 3 个吸引人的标题：\n\n{{selection}}" },
-    { id: "prompt-9", name: "自定义", enabled: true, prompt: "{{selection}}" }
-  ]
+  prompts: AIInlineI18n.defaultPrompts()
 };
 
 const promptList = document.getElementById("prompt-list");
@@ -58,7 +63,7 @@ async function loadSettings() {
     const index = settings.prompts.length;
     settings.prompts.push({
       id: `prompt-${index + 1}`,
-      name: `提示词 ${index + 1}`,
+      name: t("promptFallback", [String(index + 1)]),
       prompt: "{{selection}}"
     });
   }
@@ -101,7 +106,7 @@ function render() {
     enabledInput.className = "prompt-enabled-input";
     enabledInput.checked = prompt.enabled !== false;
     enabledInput.dataset.index = String(index);
-    enabledLabel.append(enabledInput, document.createTextNode("启用"));
+    enabledLabel.append(enabledInput, document.createTextNode(t("enable")));
     controlColumn.append(indexBadge, enabledLabel);
 
     const fields = document.createElement("div");
@@ -110,7 +115,7 @@ function render() {
     const nameField = document.createElement("div");
     nameField.className = "field";
     const nameLabel = document.createElement("label");
-    nameLabel.textContent = "名称";
+    nameLabel.textContent = t("nameLabel");
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.className = "prompt-name-input";
@@ -121,7 +126,7 @@ function render() {
     const promptField = document.createElement("div");
     promptField.className = "field";
     const promptLabel = document.createElement("label");
-    promptLabel.textContent = "提示词模板";
+    promptLabel.textContent = t("promptTemplate");
     const promptInput = document.createElement("textarea");
     promptInput.className = "prompt-prompt-input";
     promptInput.value = prompt.prompt || "";
@@ -164,7 +169,7 @@ function collectSettings() {
 async function saveSettings() {
   settings = collectSettings();
   await chrome.storage.local.set({ settings });
-  saveStatus.textContent = "已保存";
+  saveStatus.textContent = t("saved");
   window.setTimeout(() => {
     saveStatus.textContent = "";
   }, 1800);
@@ -174,7 +179,7 @@ async function restoreDefaults() {
   settings.prompts = cloneSettings(DEFAULT_SETTINGS.prompts);
   render();
   await saveSettings();
-  saveStatus.textContent = "已恢复默认设置";
+  saveStatus.textContent = t("defaultsRestored");
   window.setTimeout(() => {
     saveStatus.textContent = "";
   }, 1800);
@@ -184,12 +189,12 @@ async function testConnection() {
   const current = collectSettings();
   if (!current.baseUrl || !current.apiKey || !current.model) {
     testResult.className = "error";
-    testResult.textContent = "请先填写 Base URL、API Key 和模型名称";
+    testResult.textContent = t("fillBaseUrlKeyModel");
     return;
   }
 
   testResult.className = "";
-  testResult.textContent = "正在测试…";
+  testResult.textContent = t("testing");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -211,12 +216,12 @@ async function fetchModels() {
 
   if (!baseUrl) {
     result.className = "error";
-    result.textContent = "请先填写 Base URL";
+    result.textContent = t("baseUrlRequiredShort");
     return;
   }
 
   result.className = "";
-  result.textContent = "正在获取模型列表…";
+  result.textContent = t("fetchingModels");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -240,8 +245,8 @@ async function fetchModels() {
 
     result.className = "ok";
     result.textContent = response.models.length
-      ? `已获取 ${response.models.length} 个模型，可点击模型输入框选择。`
-      : "接口没有返回模型列表。";
+      ? t("modelsFetched", [String(response.models.length)])
+      : t("noModelsReturned");
   } catch (error) {
     result.className = "error";
     result.textContent = error.message || String(error);
@@ -272,5 +277,5 @@ baseUrlInput.addEventListener("blur", () => {
 });
 
 loadSettings().catch(() => {
-  saveStatus.textContent = "读取设置失败";
+  saveStatus.textContent = t("readSettingsFailed");
 });

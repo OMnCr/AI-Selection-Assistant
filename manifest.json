@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "AI 划词助手",
-  "version": "1.3.0",
-  "description": "选中网页文字后，使用组合快捷键将选中内容和自定义提示词发送到可配置的 AI 接口，并在选区下方流式展示回复。",
+  "default_locale": "en",
+  "name": "__MSG_extName__",
+  "version": "1.4.0",
+  "description": "__MSG_extDescription__",
   "author": "OMnCr",
   "permissions": [
     "storage"
@@ -15,7 +16,7 @@
   },
   "options_page": "options.html",
   "action": {
-    "default_title": "AI 划词助手设置"
+    "default_title": "__MSG_actionTitle__"
   },
   "content_scripts": [
     {
@@ -23,6 +24,8 @@
         "<all_urls>"
       ],
       "js": [
+        "i18n.js",
+        "vendor/katex/katex.min.js",
         "markdown.js",
         "content.js"
       ],

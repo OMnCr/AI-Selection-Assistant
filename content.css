@@ -79,7 +79,7 @@
   display: block;
   margin-bottom: 8px;
   color: #667085;
-  content: "正在等待 AI 回复…";
+  content: attr(data-loading-text);
   font-size: 13px;
 }
 
@@ -277,6 +277,42 @@
   margin: 0.55em 0;
   border-radius: 6px;
   object-fit: contain;
+}
+
+.ai-inline-math-inline {
+  display: inline;
+}
+
+.ai-inline-math-inline .ai-inline-math {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.ai-inline-math-block {
+  display: block;
+  max-width: 100%;
+  margin: 0.72em 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.ai-inline-math-block .ai-inline-math,
+.ai-inline-math-block .katex {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.ai-inline-math math {
+  font-size: 1.06em;
+}
+
+.ai-inline-math-block math {
+  display: block;
+}
+
+.ai-inline-math .katex-error {
+  color: #b42318;
 }
 
 .ai-inline-markdown.ai-inline-streaming > :last-child::after {

@@ -1,0 +1,310 @@
+{
+  "extName": {
+    "message": "AI 划词助手"
+  },
+  "extDescription": {
+    "message": "选中网页文字后，使用组合快捷键将选中内容和自定义提示词发送到可配置的 AI 接口，并在选区下方流式展示回复。"
+  },
+  "actionTitle": {
+    "message": "AI 划词助手设置"
+  },
+  "promptSummaryName": {
+    "message": "总结"
+  },
+  "promptSummaryText": {
+    "message": "请用简洁的中文总结下面的内容：\n\n{{selection}}"
+  },
+  "promptTranslateName": {
+    "message": "翻译"
+  },
+  "promptTranslateText": {
+    "message": "请把下面的内容翻译成中文：\n\n{{selection}}"
+  },
+  "promptExplainName": {
+    "message": "解释"
+  },
+  "promptExplainText": {
+    "message": "请解释下面这段内容，尽量通俗易懂：\n\n{{selection}}"
+  },
+  "promptPolishName": {
+    "message": "润色"
+  },
+  "promptPolishText": {
+    "message": "请在不改变原意的前提下润色下面的文字：\n\n{{selection}}"
+  },
+  "promptKeyPointsName": {
+    "message": "提取要点"
+  },
+  "promptKeyPointsText": {
+    "message": "请提取下面内容的关键要点，并使用无序列表输出：\n\n{{selection}}"
+  },
+  "promptRewriteName": {
+    "message": "改写"
+  },
+  "promptRewriteText": {
+    "message": "请用另一种表达方式改写下面的内容：\n\n{{selection}}"
+  },
+  "promptAnswerName": {
+    "message": "回答问题"
+  },
+  "promptAnswerText": {
+    "message": "请基于下面的内容回答问题：\n\n{{selection}}"
+  },
+  "promptTitlesName": {
+    "message": "生成标题"
+  },
+  "promptTitlesText": {
+    "message": "请为下面的内容生成 3 个吸引人的标题：\n\n{{selection}}"
+  },
+  "promptCustomName": {
+    "message": "自定义"
+  },
+  "assistantTitle": {
+    "message": "AI 助手"
+  },
+  "copyReply": {
+    "message": "复制"
+  },
+  "copied": {
+    "message": "已复制"
+  },
+  "requestFailed": {
+    "message": "请求失败"
+  },
+  "pageNotReady": {
+    "message": "页面尚未准备好"
+  },
+  "promptNotConfigured": {
+    "message": "第 $INDEX$ 个提示词尚未配置。",
+    "placeholders": {
+      "INDEX": {
+        "content": "$1"
+      }
+    }
+  },
+  "shortcutDisabled": {
+    "message": "第 $INDEX$ 个快捷键已禁用。",
+    "placeholders": {
+      "INDEX": {
+        "content": "$1"
+      }
+    }
+  },
+  "configureBaseUrl": {
+    "message": "请先在扩展选项中配置 Base URL"
+  },
+  "configureApiKey": {
+    "message": "请先在扩展选项中配置 API Key"
+  },
+  "configureModel": {
+    "message": "请先在扩展选项中配置模型名称"
+  },
+  "noSelection": {
+    "message": "请先选中网页中的文字"
+  },
+  "operationFailed": {
+    "message": "操作失败，请重试"
+  },
+  "connectionInterrupted": {
+    "message": "连接已中断，请重试"
+  },
+  "waitingForReply": {
+    "message": "正在等待 AI 回复…"
+  },
+  "promptFallback": {
+    "message": "提示词 $INDEX$",
+    "placeholders": {
+      "INDEX": {
+        "content": "$1"
+      }
+    }
+  },
+  "baseUrlRequired": {
+    "message": "请先在扩展选项中配置 Base URL。"
+  },
+  "baseUrlInvalid": {
+    "message": "Base URL 格式无效，请填写完整地址，例如 https://api.openai.com/v1。"
+  },
+  "baseUrlFill": {
+    "message": "请先填写 Base URL。"
+  },
+  "apiKeyRequired": {
+    "message": "请先在扩展选项中配置 API Key。"
+  },
+  "modelRequired": {
+    "message": "请先在扩展选项中配置模型名称。"
+  },
+  "requestFailedHttp": {
+    "message": "请求失败：HTTP $DETAIL$",
+    "placeholders": {
+      "DETAIL": {
+        "content": "$1"
+      }
+    }
+  },
+  "streamUnavailable": {
+    "message": "接口没有返回可读取的流式响应。"
+  },
+  "modelsRequestFailed": {
+    "message": "获取模型列表失败：HTTP $DETAIL$",
+    "placeholders": {
+      "DETAIL": {
+        "content": "$1"
+      }
+    }
+  },
+  "testPrompt": {
+    "message": "请只回复 OK。"
+  },
+  "connectionSuccess": {
+    "message": "连接成功：$CONTENT$",
+    "placeholders": {
+      "CONTENT": {
+        "content": "$1"
+      }
+    }
+  },
+  "connectionSuccessShort": {
+    "message": "连接成功"
+  },
+  "optionsTitle": {
+    "message": "AI 划词助手设置"
+  },
+  "subtitle": {
+    "message": "选中文字后，使用「快捷键 + 1/2/3…」发送到 AI 并流式显示回复。"
+  },
+  "saveSettings": {
+    "message": "保存设置"
+  },
+  "interfaceConfig": {
+    "message": "接口配置"
+  },
+  "baseUrlHint": {
+    "message": "兼容 OpenAI Chat Completions 接口。填写到 /v1 即可，也可直接填写完整的 /chat/completions 地址。"
+  },
+  "modelName": {
+    "message": "模型名称"
+  },
+  "modelList": {
+    "message": "模型列表"
+  },
+  "fetchModels": {
+    "message": "获取模型列表"
+  },
+  "modelHint": {
+    "message": "填写 Base URL 后可获取该接口支持的模型列表。"
+  },
+  "modifierLabel": {
+    "message": "快捷键修饰键"
+  },
+  "modifierAlt": {
+    "message": "Alt + 数字"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl + 数字"
+  },
+  "modifierCtrlAlt": {
+    "message": "Ctrl + Alt + 数字"
+  },
+  "modifierCtrlShift": {
+    "message": "Ctrl + Shift + 数字"
+  },
+  "modifierAltShift": {
+    "message": "Alt + Shift + 数字"
+  },
+  "modifierMeta": {
+    "message": "Meta + 数字"
+  },
+  "modifierHint": {
+    "message": "例如选择「Alt + 数字」后，按 Alt+1 使用第 1 个提示词。部分组合可能被浏览器占用，例如 Ctrl+数字 通常用于切换标签页。"
+  },
+  "connectionTest": {
+    "message": "连接测试"
+  },
+  "testCurrentApi": {
+    "message": "测试当前接口"
+  },
+  "streamLabel": {
+    "message": "流式传输"
+  },
+  "streamEnabled": {
+    "message": "启用流式输出"
+  },
+  "reasoningLabel": {
+    "message": "思考等级"
+  },
+  "reasoningNone": {
+    "message": "无"
+  },
+  "reasoningLow": {
+    "message": "低"
+  },
+  "reasoningMedium": {
+    "message": "中"
+  },
+  "reasoningHigh": {
+    "message": "高"
+  },
+  "temperatureLabel": {
+    "message": "温度"
+  },
+  "topPLabel": {
+    "message": "Top P"
+  },
+  "maxTokensLabel": {
+    "message": "最大 Token 数"
+  },
+  "defaultParamPlaceholder": {
+    "message": "留空使用接口默认值"
+  },
+  "promptShortcuts": {
+    "message": "提示词快捷键"
+  },
+  "promptHelp": {
+    "message": "第 1–9 项分别对应「快捷键 + 1」到「快捷键 + 9」。提示词中可用 {{selection}} 代表选中的文字；如果不写占位符，选中内容会自动追加到末尾。"
+  },
+  "restoreDefaults": {
+    "message": "恢复默认提示词"
+  },
+  "enable": {
+    "message": "启用"
+  },
+  "nameLabel": {
+    "message": "名称"
+  },
+  "promptTemplate": {
+    "message": "提示词模板"
+  },
+  "saved": {
+    "message": "已保存"
+  },
+  "defaultsRestored": {
+    "message": "已恢复默认设置"
+  },
+  "fillBaseUrlKeyModel": {
+    "message": "请先填写 Base URL、API Key 和模型名称"
+  },
+  "testing": {
+    "message": "正在测试…"
+  },
+  "baseUrlRequiredShort": {
+    "message": "请先填写 Base URL"
+  },
+  "fetchingModels": {
+    "message": "正在获取模型列表…"
+  },
+  "modelsFetched": {
+    "message": "已获取 $COUNT$ 个模型，可点击模型输入框选择。",
+    "placeholders": {
+      "COUNT": {
+        "content": "$1"
+      }
+    }
+  },
+  "noModelsReturned": {
+    "message": "接口没有返回模型列表。"
+  },
+  "readSettingsFailed": {
+    "message": "读取设置失败"
+  }
+}

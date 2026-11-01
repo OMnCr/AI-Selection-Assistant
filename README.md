@@ -1,5 +1,7 @@
 # AI 划词助手
 
+[English README](README.en.md)
+
 一个 Chrome Manifest V3 扩展：在网页中选中文字后，按下 `Alt + 1/2/3…`，把选中内容和对应提示词发送到可配置的 OpenAI 兼容接口，并在选区下方流式展示回复。
 
 ## 功能
@@ -7,6 +9,8 @@
 - 划词触发，回复面板直接显示在网页选区下方，不弹出新窗口，焦点保持在当前页面。
 - 支持流式输出（SSE，`chat/completions` 的 `stream: true`）。
 - 支持 Markdown 渲染：标题、列表、任务列表、表格、引用、链接、图片和代码块会直接排版显示。
+- 支持数学公式渲染：`$...$`、`$$...$$`、`\(...\)`、`\[...\]` 和 `\begin{...}` 环境。
+- 界面跟随浏览器语言自动切换：默认英文，支持简体中文。
 - Base URL、API Key、模型名称均可自定义。
 - 填写 Base URL 后可获取该接口支持的模型列表。
 - 提供 9 个提示词槽位，分别对应 `快捷键 + 1` 到 `快捷键 + 9`。
@@ -70,5 +74,6 @@ Content-Type: application/json
 
 - 作者：OMnCr
 - 许可证：[GNU Affero General Public License v3.0](LICENSE)
+- 公式渲染使用本地打包的 [KaTeX](https://katex.org/)，许可证见 [vendor/katex/LICENSE](vendor/katex/LICENSE)。
 
 本扩展适用于 Chrome 和 Microsoft Edge（Chromium）应用商店。发布前请在对应商店后台完成隐私说明、截图和商店描述等审核材料。

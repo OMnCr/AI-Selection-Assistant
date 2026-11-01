@@ -42,6 +42,13 @@
         continue;
       }
 
+      const mathBlock = parseBlockMath(lines, index);
+      if (mathBlock) {
+        parent.append(createMathNode(mathBlock.tex, true));
+        index = mathBlock.next;
+        continue;
+      }
+
       const heading = matchHeading(lines[index]);
       if (heading) {
         const element = document.createElement(`h${heading.level}`);
@@ -276,6 +283,122 @@
     return value.split("|").map((cell) => cell.trim());
   }
 
+  function parseBlockMath(lines, start) {
+    const firstLine = lines[start].trim();
+
+    if (firstLine.startsWith("$$")) {
+      return collectDelimitedMath(lines, start, firstLine.slice(2), "$$");
+    }
+
+    if (firstLine.startsWith("\\[")) {
+      return collectDelimitedMath(lines, start, firstLine.slice(2), "\\]");
+    }
+
+    const environment = firstLine.match(/^\\begin\{([A-Za-z*]+)\}/);
+    if (environment) {
+      const endMarker = `\\end{${environment[1]}}`;
+      const texLines = [lines[start]];
+      let index = start + 1;
+      while (index < lines.length && !lines[index].includes(endMarker)) {
+        texLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) {
+        texLines.push(lines[index]);
+        index += 1;
+      }
+      return { tex: texLines.join("\n").trim(), next: index };
+    }
+
+    return null;
+  }
+
+  function collectDelimitedMath(lines, start, initialText, closingMarker) {
+    const sameLineEnd = initialText.lastIndexOf(closingMarker);
+    if (sameLineEnd >= 0) {
+      return {
+        tex: initialText.slice(0, sameLineEnd).trim(),
+        next: start + 1
+      };
+    }
+
+    const texLines = [initialText];
+    let index = start + 1;
+    while (index < lines.length) {
+      const end = lines[index].lastIndexOf(closingMarker);
+      if (end >= 0) {
+        texLines.push(lines[index].slice(0, end));
+        return { tex: texLines.join("\n").trim(), next: index + 1 };
+      }
+      texLines.push(lines[index]);
+      index += 1;
+    }
+
+    return { tex: texLines.join("\n").trim(), next: index };
+  }
+
+  function createMathNode(tex, displayMode) {
+    const wrapper = document.createElement("span");
+    wrapper.className = displayMode
+      ? "ai-inline-math-block"
+      : "ai-inline-math-inline";
+
+    const target = document.createElement("span");
+    target.className = "ai-inline-math";
+    const katexLib = globalThis.katex;
+
+    if (katexLib && typeof katexLib.renderToString === "function") {
+      try {
+        target.innerHTML = katexLib.renderToString(tex, {
+          displayMode,
+          output: "mathml",
+          throwOnError: false,
+          strict: "ignore",
+          trust: false
+        });
+        wrapper.append(target);
+        return wrapper;
+      } catch {
+        // Use the readable TeX fallback below.
+      }
+    }
+
+    target.textContent = displayMode ? `$$${tex}$$` : `$${tex}$`;
+    wrapper.append(target);
+    return wrapper;
+  }
+
+  function findInlineMathEnd(text, start) {
+    if (!text[start + 1] || /\s/.test(text[start + 1])) {
+      return -1;
+    }
+
+    for (let index = start + 1; index < text.length; index += 1) {
+      if (text[index] === "\\") {
+        index += 1;
+        continue;
+      }
+      if (text[index] === "\n") {
+        return -1;
+      }
+      if (text[index] === "$") {
+        if (index === start + 1) {
+          return -1;
+        }
+        const body = text.slice(start + 1, index);
+        const after = text[index + 1] || "";
+        if (
+          /^[\d.,\s]+$/.test(body) ||
+          (/\d/.test(text[start + 1]) && /\d/.test(after))
+        ) {
+          return -1;
+        }
+        return index;
+      }
+    }
+    return -1;
+  }
+
   function renderInline(text, parent) {
     let index = 0;
     let buffer = "";
@@ -289,6 +412,26 @@
 
     while (index < text.length) {
       const char = text[index];
+
+      if (char === "\\" && text[index + 1] === "(") {
+        const end = text.indexOf("\\)", index + 2);
+        if (end > index + 2) {
+          flush();
+          parent.append(createMathNode(text.slice(index + 2, end), false));
+          index = end + 2;
+          continue;
+        }
+      }
+
+      if (char === "\\" && text[index + 1] === "[") {
+        const end = text.indexOf("\\]", index + 2);
+        if (end > index + 2) {
+          flush();
+          parent.append(createMathNode(text.slice(index + 2, end), true));
+          index = end + 2;
+          continue;
+        }
+      }
 
       if (char === "\\" && index + 1 < text.length) {
         buffer += text[index + 1];
@@ -315,6 +458,26 @@
         buffer += marker;
         index += runLength;
         continue;
+      }
+
+      if (char === "$" && text[index + 1] === "$") {
+        const end = text.indexOf("$$", index + 2);
+        if (end > index + 2) {
+          flush();
+          parent.append(createMathNode(text.slice(index + 2, end), true));
+          index = end + 2;
+          continue;
+        }
+      }
+
+      if (char === "$") {
+        const end = findInlineMathEnd(text, index);
+        if (end > index) {
+          flush();
+          parent.append(createMathNode(text.slice(index + 1, end), false));
+          index = end + 1;
+          continue;
+        }
       }
 
       if ((char === "!" && text[index + 1] === "[") || char === "[") {
@@ -537,12 +700,22 @@
     }
     return Boolean(
       matchFence(line) ||
+        isBlockMathStart(line) ||
         matchHeading(line) ||
         matchHorizontalRule(line) ||
         /^ {0,3}>/.test(line) ||
         matchListLine(line) ||
         /^ {4}\S/.test(line) ||
         isTableStart(lines, index)
+    );
+  }
+
+  function isBlockMathStart(line) {
+    const trimmed = line.trim();
+    return (
+      trimmed.startsWith("$$") ||
+      trimmed.startsWith("\\[") ||
+      /^\\begin\{[A-Za-z*]+\}/.test(trimmed)
     );
   }
 

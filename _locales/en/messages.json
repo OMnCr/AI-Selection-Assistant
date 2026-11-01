@@ -1,0 +1,310 @@
+{
+  "extName": {
+    "message": "AI Selection Assistant"
+  },
+  "extDescription": {
+    "message": "Select text on any page, press a shortcut, and stream an AI response below the selection using your own API endpoint."
+  },
+  "actionTitle": {
+    "message": "AI Selection Assistant Settings"
+  },
+  "promptSummaryName": {
+    "message": "Summarize"
+  },
+  "promptSummaryText": {
+    "message": "Summarize the following content concisely:\n\n{{selection}}"
+  },
+  "promptTranslateName": {
+    "message": "Translate"
+  },
+  "promptTranslateText": {
+    "message": "Translate the following content into English:\n\n{{selection}}"
+  },
+  "promptExplainName": {
+    "message": "Explain"
+  },
+  "promptExplainText": {
+    "message": "Explain the following content in clear, plain language:\n\n{{selection}}"
+  },
+  "promptPolishName": {
+    "message": "Polish"
+  },
+  "promptPolishText": {
+    "message": "Polish the following text without changing its meaning:\n\n{{selection}}"
+  },
+  "promptKeyPointsName": {
+    "message": "Key points"
+  },
+  "promptKeyPointsText": {
+    "message": "Extract the key points from the following content and output them as a bulleted list:\n\n{{selection}}"
+  },
+  "promptRewriteName": {
+    "message": "Rewrite"
+  },
+  "promptRewriteText": {
+    "message": "Rewrite the following content in a different way:\n\n{{selection}}"
+  },
+  "promptAnswerName": {
+    "message": "Answer"
+  },
+  "promptAnswerText": {
+    "message": "Answer the question based on the following content:\n\n{{selection}}"
+  },
+  "promptTitlesName": {
+    "message": "Titles"
+  },
+  "promptTitlesText": {
+    "message": "Generate 3 compelling titles for the following content:\n\n{{selection}}"
+  },
+  "promptCustomName": {
+    "message": "Custom"
+  },
+  "assistantTitle": {
+    "message": "AI Assistant"
+  },
+  "copyReply": {
+    "message": "Copy"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "requestFailed": {
+    "message": "Request failed"
+  },
+  "pageNotReady": {
+    "message": "The page is not ready"
+  },
+  "promptNotConfigured": {
+    "message": "Prompt $INDEX$ is not configured.",
+    "placeholders": {
+      "INDEX": {
+        "content": "$1"
+      }
+    }
+  },
+  "shortcutDisabled": {
+    "message": "Shortcut $INDEX$ is disabled.",
+    "placeholders": {
+      "INDEX": {
+        "content": "$1"
+      }
+    }
+  },
+  "configureBaseUrl": {
+    "message": "Configure Base URL in the extension options"
+  },
+  "configureApiKey": {
+    "message": "Configure API Key in the extension options"
+  },
+  "configureModel": {
+    "message": "Configure a model name in the extension options"
+  },
+  "noSelection": {
+    "message": "Select some text on the page first"
+  },
+  "operationFailed": {
+    "message": "Operation failed. Please try again"
+  },
+  "connectionInterrupted": {
+    "message": "Connection interrupted. Please try again"
+  },
+  "waitingForReply": {
+    "message": "Waiting for AI response…"
+  },
+  "promptFallback": {
+    "message": "Prompt $INDEX$",
+    "placeholders": {
+      "INDEX": {
+        "content": "$1"
+      }
+    }
+  },
+  "baseUrlRequired": {
+    "message": "Configure Base URL in the extension options."
+  },
+  "baseUrlInvalid": {
+    "message": "Invalid Base URL. Enter a full URL such as https://api.openai.com/v1."
+  },
+  "baseUrlFill": {
+    "message": "Enter a Base URL first."
+  },
+  "apiKeyRequired": {
+    "message": "Configure API Key in the extension options."
+  },
+  "modelRequired": {
+    "message": "Configure a model name in the extension options."
+  },
+  "requestFailedHttp": {
+    "message": "Request failed: HTTP $DETAIL$",
+    "placeholders": {
+      "DETAIL": {
+        "content": "$1"
+      }
+    }
+  },
+  "streamUnavailable": {
+    "message": "The API did not return a readable streaming response."
+  },
+  "modelsRequestFailed": {
+    "message": "Failed to fetch the model list: HTTP $DETAIL$",
+    "placeholders": {
+      "DETAIL": {
+        "content": "$1"
+      }
+    }
+  },
+  "testPrompt": {
+    "message": "Reply with OK only."
+  },
+  "connectionSuccess": {
+    "message": "Connection successful: $CONTENT$",
+    "placeholders": {
+      "CONTENT": {
+        "content": "$1"
+      }
+    }
+  },
+  "connectionSuccessShort": {
+    "message": "Connection successful"
+  },
+  "optionsTitle": {
+    "message": "AI Selection Assistant Settings"
+  },
+  "subtitle": {
+    "message": "Select text, use a shortcut plus 1/2/3…, and stream the AI response."
+  },
+  "saveSettings": {
+    "message": "Save settings"
+  },
+  "interfaceConfig": {
+    "message": "API configuration"
+  },
+  "baseUrlHint": {
+    "message": "Works with OpenAI-compatible Chat Completions APIs. Enter the URL through /v1, or paste a full /chat/completions endpoint."
+  },
+  "modelName": {
+    "message": "Model"
+  },
+  "modelList": {
+    "message": "Model list"
+  },
+  "fetchModels": {
+    "message": "Fetch models"
+  },
+  "modelHint": {
+    "message": "After entering a Base URL, you can fetch the models supported by this API."
+  },
+  "modifierLabel": {
+    "message": "Shortcut modifier"
+  },
+  "modifierAlt": {
+    "message": "Alt + number"
+  },
+  "modifierCtrl": {
+    "message": "Ctrl + number"
+  },
+  "modifierCtrlAlt": {
+    "message": "Ctrl + Alt + number"
+  },
+  "modifierCtrlShift": {
+    "message": "Ctrl + Shift + number"
+  },
+  "modifierAltShift": {
+    "message": "Alt + Shift + number"
+  },
+  "modifierMeta": {
+    "message": "Meta + number"
+  },
+  "modifierHint": {
+    "message": "For example, Alt + number makes Alt+1 use the first prompt. Some combinations may be reserved by the browser, such as Ctrl + number for switching tabs."
+  },
+  "connectionTest": {
+    "message": "Connection test"
+  },
+  "testCurrentApi": {
+    "message": "Test current API"
+  },
+  "streamLabel": {
+    "message": "Streaming"
+  },
+  "streamEnabled": {
+    "message": "Enable streaming output"
+  },
+  "reasoningLabel": {
+    "message": "Reasoning level"
+  },
+  "reasoningNone": {
+    "message": "None"
+  },
+  "reasoningLow": {
+    "message": "Low"
+  },
+  "reasoningMedium": {
+    "message": "Medium"
+  },
+  "reasoningHigh": {
+    "message": "High"
+  },
+  "temperatureLabel": {
+    "message": "Temperature"
+  },
+  "topPLabel": {
+    "message": "Top P"
+  },
+  "maxTokensLabel": {
+    "message": "Max tokens"
+  },
+  "defaultParamPlaceholder": {
+    "message": "Leave empty to use the API default"
+  },
+  "promptShortcuts": {
+    "message": "Prompt shortcuts"
+  },
+  "promptHelp": {
+    "message": "Items 1–9 map to shortcut + 1 through shortcut + 9. Use {{selection}} where the selected text should appear. If omitted, the selection is appended to the end."
+  },
+  "restoreDefaults": {
+    "message": "Restore default prompts"
+  },
+  "enable": {
+    "message": "Enable"
+  },
+  "nameLabel": {
+    "message": "Name"
+  },
+  "promptTemplate": {
+    "message": "Prompt template"
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "defaultsRestored": {
+    "message": "Default prompts restored"
+  },
+  "fillBaseUrlKeyModel": {
+    "message": "Enter Base URL, API Key, and model name first"
+  },
+  "testing": {
+    "message": "Testing…"
+  },
+  "baseUrlRequiredShort": {
+    "message": "Enter a Base URL first"
+  },
+  "fetchingModels": {
+    "message": "Fetching model list…"
+  },
+  "modelsFetched": {
+    "message": "Fetched $COUNT$ models. Click the model field to choose one.",
+    "placeholders": {
+      "COUNT": {
+        "content": "$1"
+      }
+    }
+  },
+  "noModelsReturned": {
+    "message": "The API did not return a model list."
+  },
+  "readSettingsFailed": {
+    "message": "Failed to read settings"
+  }
+}

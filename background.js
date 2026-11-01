@@ -1,3 +1,6 @@
+importScripts("i18n.js");
+
+const t = AIInlineI18n.t;
 const DEFAULT_SETTINGS = {
   baseUrl: "https://api.openai.com/v1",
   apiKey: "",
@@ -8,62 +11,7 @@ const DEFAULT_SETTINGS = {
   topP: "",
   maxTokens: "",
   reasoningEffort: "none",
-  prompts: [
-    {
-      id: "prompt-1",
-      name: "总结",
-      enabled: true,
-      prompt: "请用简洁的中文总结下面的内容：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-2",
-      name: "翻译",
-      enabled: true,
-      prompt: "请把下面的内容翻译成中文：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-3",
-      name: "解释",
-      enabled: true,
-      prompt: "请解释下面这段内容，尽量通俗易懂：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-4",
-      name: "润色",
-      enabled: true,
-      prompt: "请在不改变原意的前提下润色下面的文字：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-5",
-      name: "提取要点",
-      enabled: true,
-      prompt: "请提取下面内容的关键要点，并使用无序列表输出：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-6",
-      name: "改写",
-      enabled: true,
-      prompt: "请用另一种表达方式改写下面的内容：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-7",
-      name: "回答问题",
-      enabled: true,
-      prompt: "请基于下面的内容回答问题：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-8",
-      name: "生成标题",
-      enabled: true,
-      prompt: "请为下面的内容生成 3 个吸引人的标题：\n\n{{selection}}"
-    },
-    {
-      id: "prompt-9",
-      name: "自定义",
-      enabled: true,
-      prompt: "{{selection}}"
-    }
-  ]
+  prompts: AIInlineI18n.defaultPrompts()
 };
 
 async function getSettings() {
@@ -81,14 +29,14 @@ async function getSettings() {
 function normalizeBaseUrl(baseUrl) {
   const trimmed = String(baseUrl || "").trim();
   if (!trimmed) {
-    throw new Error("请先在扩展选项中配置 Base URL。");
+    throw new Error(t("baseUrlRequired"));
   }
 
   let url;
   try {
     url = new URL(trimmed);
   } catch {
-    throw new Error("Base URL 格式无效，请填写完整地址，例如 https://api.openai.com/v1。");
+    throw new Error(t("baseUrlInvalid"));
   }
 
   const pathname = url.pathname.replace(/\/+$/, "");
@@ -102,14 +50,14 @@ function normalizeBaseUrl(baseUrl) {
 function normalizeModelsUrl(baseUrl) {
   const trimmed = String(baseUrl || "").trim();
   if (!trimmed) {
-    throw new Error("请先填写 Base URL。");
+    throw new Error(t("baseUrlFill"));
   }
 
   let url;
   try {
     url = new URL(trimmed);
   } catch {
-    throw new Error("Base URL 格式无效，请填写完整地址，例如 https://api.openai.com/v1。");
+    throw new Error(t("baseUrlInvalid"));
   }
 
   let pathname = url.pathname.replace(/\/+$/, "");
@@ -223,15 +171,15 @@ async function handleStream(port, request) {
   try {
     const settings = await getSettings();
     if (!settings.apiKey.trim()) {
-      throw new Error("请先在扩展选项中配置 API Key。");
+      throw new Error(t("apiKeyRequired"));
     }
     if (!settings.model.trim()) {
-      throw new Error("请先在扩展选项中配置模型名称。");
+      throw new Error(t("modelRequired"));
     }
 
     const promptConfig = settings.prompts[request.promptIndex];
     if (!promptConfig || !String(promptConfig.prompt || "").trim()) {
-      throw new Error(`第 ${request.promptIndex + 1} 个提示词尚未配置。`);
+      throw new Error(t("promptNotConfigured", [String(request.promptIndex + 1)]));
     }
 
     const url = normalizeBaseUrl(settings.baseUrl);
@@ -257,7 +205,11 @@ async function handleStream(port, request) {
       } catch {
         detail = "";
       }
-      throw new Error(`请求失败：HTTP ${response.status}${detail ? ` - ${detail}` : ""}`);
+      throw new Error(
+        t("requestFailedHttp", [
+          `${response.status}${detail ? ` - ${detail}` : ""}`
+        ])
+      );
     }
 
     if (settings.stream === false) {
@@ -275,7 +227,7 @@ async function handleStream(port, request) {
     }
 
     if (!response.body) {
-      throw new Error("接口没有返回可读取的流式响应。");
+      throw new Error(t("streamUnavailable"));
     }
 
     const reader = response.body.getReader();
@@ -385,7 +337,11 @@ async function listModels(request) {
     } catch {
       detail = "";
     }
-    throw new Error(`获取模型列表失败：HTTP ${response.status}${detail ? ` - ${detail}` : ""}`);
+    throw new Error(
+      t("modelsRequestFailed", [
+        `${response.status}${detail ? ` - ${detail}` : ""}`
+      ])
+    );
   }
 
   const data = await response.json();
@@ -417,7 +373,7 @@ async function testConnection(request) {
       messages: [
         {
           role: "user",
-          content: "请只回复 OK。"
+          content: t("testPrompt")
         }
       ]
     })
@@ -439,6 +395,9 @@ async function testConnection(request) {
   const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
   return {
     ok: true,
-    message: typeof content === "string" ? `连接成功：${content.slice(0, 80)}` : "连接成功"
+    message:
+      typeof content === "string"
+        ? t("connectionSuccess", [content.slice(0, 80)])
+        : t("connectionSuccessShort")
   };
 }

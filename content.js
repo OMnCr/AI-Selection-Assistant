@@ -1,20 +1,11 @@
 (() => {
+  const t = AIInlineI18n.t;
   const DEFAULT_SETTINGS = {
     baseUrl: "https://api.openai.com/v1",
     apiKey: "",
     model: "gpt-4o-mini",
     modifier: "alt",
-    prompts: [
-      { id: "prompt-1", name: "总结", enabled: true, prompt: "请用简洁的中文总结下面的内容：\n\n{{selection}}" },
-      { id: "prompt-2", name: "翻译", enabled: true, prompt: "请把下面的内容翻译成中文：\n\n{{selection}}" },
-      { id: "prompt-3", name: "解释", enabled: true, prompt: "请解释下面这段内容，尽量通俗易懂：\n\n{{selection}}" },
-      { id: "prompt-4", name: "润色", enabled: true, prompt: "请在不改变原意的前提下润色下面的文字：\n\n{{selection}}" },
-      { id: "prompt-5", name: "提取要点", enabled: true, prompt: "请提取下面内容的关键要点，并使用无序列表输出：\n\n{{selection}}" },
-      { id: "prompt-6", name: "改写", enabled: true, prompt: "请用另一种表达方式改写下面的内容：\n\n{{selection}}" },
-      { id: "prompt-7", name: "回答问题", enabled: true, prompt: "请基于下面的内容回答问题：\n\n{{selection}}" },
-      { id: "prompt-8", name: "生成标题", enabled: true, prompt: "请为下面的内容生成 3 个吸引人的标题：\n\n{{selection}}" },
-      { id: "prompt-9", name: "自定义", enabled: true, prompt: "{{selection}}" }
-    ]
+    prompts: AIInlineI18n.defaultPrompts()
   };
 
   let currentSettings = { ...DEFAULT_SETTINGS, prompts: [...DEFAULT_SETTINGS.prompts] };
@@ -132,7 +123,7 @@
     closePanel();
 
     if (!document.body) {
-      throw new Error("页面尚未准备好");
+      throw new Error(t("pageNotReady"));
     }
 
     const panel = document.createElement("section");
@@ -145,7 +136,7 @@
 
     const title = document.createElement("div");
     title.className = "ai-inline-title";
-    title.textContent = promptName || "AI 助手";
+    title.textContent = promptName || t("assistantTitle");
 
     const actions = document.createElement("div");
     actions.className = "ai-inline-actions";
@@ -153,8 +144,8 @@
     const copyButton = document.createElement("button");
     copyButton.type = "button";
     copyButton.className = "ai-inline-button";
-    copyButton.textContent = "复制";
-    copyButton.title = "复制回复";
+    copyButton.textContent = t("copyReply");
+    copyButton.title = t("copyReply");
 
     actions.append(copyButton);
     header.append(title, actions);
@@ -162,6 +153,7 @@
     const body = document.createElement("div");
     body.className = "ai-inline-body";
     body.classList.add("ai-inline-loading");
+    body.dataset.loadingText = t("waitingForReply");
 
     const contentEl = document.createElement("div");
     contentEl.className = "ai-inline-content ai-inline-markdown ai-inline-streaming";
@@ -200,9 +192,9 @@
       } else {
         fallbackCopy();
       }
-      copyButton.textContent = "已复制";
+      copyButton.textContent = t("copied");
       window.setTimeout(() => {
-        copyButton.textContent = "复制";
+        copyButton.textContent = t("copyReply");
       }, 1200);
     });
 
@@ -252,7 +244,7 @@
       window.cancelAnimationFrame(panel.renderFrame);
       panel.renderFrame = null;
     }
-    panel.rawText = message || "请求失败";
+    panel.rawText = message || t("requestFailed");
     panel.contentEl.classList.remove("ai-inline-streaming");
     panel.contentEl.classList.add("ai-inline-plain");
     panel.contentEl.textContent = panel.rawText;
@@ -321,27 +313,30 @@
     const prompts = Array.isArray(currentSettings.prompts) ? currentSettings.prompts : [];
     const promptConfig = prompts[promptIndex];
     if (!promptConfig || !String(promptConfig.prompt || "").trim()) {
-      showToast(`第 ${promptIndex + 1} 个提示词尚未配置`);
+      showToast(t("promptNotConfigured", [String(promptIndex + 1)]));
       return;
     }
     if (promptConfig.enabled === false) {
-      showToast(`第 ${promptIndex + 1} 个快捷键已禁用`);
+      showToast(t("shortcutDisabled", [String(promptIndex + 1)]));
       return;
     }
     if (!currentSettings.baseUrl || !currentSettings.baseUrl.trim()) {
-      showToast("请先在扩展选项中配置 Base URL");
+      showToast(t("configureBaseUrl"));
       return;
     }
     if (!currentSettings.apiKey || !currentSettings.apiKey.trim()) {
-      showToast("请先在扩展选项中配置 API Key");
+      showToast(t("configureApiKey"));
       return;
     }
     if (!currentSettings.model || !currentSettings.model.trim()) {
-      showToast("请先在扩展选项中配置模型名称");
+      showToast(t("configureModel"));
       return;
     }
 
-    const panel = createPanel(promptConfig.name || `提示词 ${promptIndex + 1}`, selectionData.range);
+    const panel = createPanel(
+      promptConfig.name || t("promptFallback", [String(promptIndex + 1)]),
+      selectionData.range
+    );
 
     const port = chrome.runtime.connect({ name: "ai-inline-stream" });
     activePort = port;
@@ -384,7 +379,7 @@
       } else if (message.type === "error") {
         panel.body.classList.remove("ai-inline-loading");
         panel.body.classList.add("ai-inline-error");
-        showPanelError(panel, message.message || "请求失败");
+        showPanelError(panel, message.message || t("requestFailed"));
         finish();
       }
     });
@@ -394,7 +389,7 @@
         panel.body.classList.remove("ai-inline-loading");
         panel.body.classList.add("ai-inline-error");
         if (!panel.rawText) {
-          showPanelError(panel, "连接已中断，请重试。");
+          showPanelError(panel, t("connectionInterrupted"));
         } else {
           flushPanelRender(panel);
           panel.contentEl.classList.remove("ai-inline-streaming");
@@ -433,12 +428,12 @@
 
       const selectionData = getSelectionData();
       if (!selectionData) {
-        showToast("请先选中网页中的文字");
+        showToast(t("noSelection"));
         return;
       }
 
       runPrompt(number - 1, selectionData).catch(() => {
-        showToast("操作失败，请重试");
+        showToast(t("operationFailed"));
       });
     },
     true
