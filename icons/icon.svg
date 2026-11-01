@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="AI Inline Assistant">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a2a4a"/>
+      <stop offset="1" stop-color="#080d19"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#68b4ff"/>
+      <stop offset="1" stop-color="#2474ee"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2f81f7" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2f81f7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="48" y="48" width="928" height="928" rx="228" fill="url(#bg)"/>
+  <ellipse cx="512" cy="560" rx="402" ry="190" fill="url(#glow)"/>
+  <rect x="196" y="452" width="632" height="152" rx="76" fill="url(#accent)"/>
+  <rect x="196" y="320" width="520" height="74" rx="37" fill="#ffffff" fill-opacity="0.93"/>
+  <rect x="196" y="668" width="420" height="74" rx="37" fill="#ffffff" fill-opacity="0.59"/>
+  <path d="M812 164 L838 240 L914 266 L838 292 L812 368 L786 292 L710 266 L786 240 Z" fill="#ffffff" fill-opacity="0.95"/>
+</svg>

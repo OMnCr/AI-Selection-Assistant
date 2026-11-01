@@ -1,0 +1,24 @@
+{
+  "name": "ai-selection-assistant",
+  "version": "1.5.0",
+  "private": true,
+  "description": "Chrome/Edge MV3 extension that streams AI answers inline for the selected text",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "author": "OMnCr",
+  "homepage": "https://github.com/OMnCr/Lightweight-custom-AI-Q-A-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OMnCr/Lightweight-custom-AI-Q-A-plugin.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node test/markdown.test.mjs",
+    "check": "node scripts/check-manifest.mjs",
+    "verify": "npm run check && npm test",
+    "package": "node scripts/package.mjs",
+    "icons": "python scripts/make-icons.py"
+  }
+}
